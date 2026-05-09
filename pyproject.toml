@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ml-nutraceuticos-ganado-lechero"
+version = "0.1.0"
+description = "Utilidades mínimas para EDA y preparación de datos"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pandas>=2.2,<3.0",
+]
+
+[project.scripts]
+convert-raw-data = "ml_nutraceuticos_ganado_lechero.convert_raw_data:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
