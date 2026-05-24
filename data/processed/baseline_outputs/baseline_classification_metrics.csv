@@ -1,0 +1,4 @@
+Modelo,ROC-AUC,PR-AUC,F1 (positivo),F1 (macro),Precision+,Recall+,Balanced Acc.,Pred Pos%
+DummyClassifier (stratified),0.5059,0.0379,0.0496,0.5057,0.0481,0.0513,0.5059,3.99
+Logistic Regression (balanced),0.501,0.0374,0.069,0.3313,0.0367,0.5604,0.4949,57.03
+"Decision Tree (depth=5, balanced)",0.5004,0.0374,0.0722,0.1349,0.0376,0.8956,0.5028,89.01

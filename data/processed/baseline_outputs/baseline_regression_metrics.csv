@@ -1,0 +1,5 @@
+Modelo,RMSE,MAE,R²,MAPE%
+DummyRegressor (mediana),4.1278,3.0218,-0.0063,18.64
+Ridge (solo FCR),2.1873,1.821,0.7175,11.85
+Ridge Regression (todas),0.7268,0.5686,0.9688,3.77
+Decision Tree (depth=5),1.4129,0.9666,0.8821,5.72

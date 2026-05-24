@@ -1,0 +1,21 @@
+{
+  "processed_dataset_path": "/home/jperez/ml-nutraceuticos-ganado-lechero/data/processed/dataset_vacas_24m_feature_engineering.csv",
+  "raw_dataset_path": "/home/jperez/ml-nutraceuticos-ganado-lechero/data/raw/csv/dataset_vacas_24m_v2.csv",
+  "raw_rows": 73000,
+  "raw_cols": 35,
+  "processed_rows": 73000,
+  "processed_cols": 32,
+  "metadata_cols": [
+    "id_vaca"
+  ],
+  "processed_has_native_groups": false,
+  "train_rows": 58400,
+  "test_rows": 14600,
+  "ks_p_value": 1.849931633584625e-93,
+  "mastitis_rate_train": 0.04059931506849315,
+  "mastitis_rate_test": 0.0373972602739726,
+  "best_reg_rmse": 0.7268,
+  "best_clf_auc": 0.5059,
+  "best_clf_pr_auc": 0.0379,
+  "classification_has_signal": false
+}
