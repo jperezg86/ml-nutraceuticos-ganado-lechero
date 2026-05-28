@@ -1,6 +1,6 @@
 {
-  "processed_dataset_path": "/home/jperez/ml-nutraceuticos-ganado-lechero/data/processed/dataset_vacas_24m_feature_engineering.csv",
-  "raw_dataset_path": "/home/jperez/ml-nutraceuticos-ganado-lechero/data/raw/csv/dataset_vacas_24m_v2.csv",
+  "processed_dataset_path": "/Users/oscar/Documents/GitHub/ml-nutraceuticos-ganado-lechero/data/processed/dataset_vacas_24m_feature_engineering.csv",
+  "raw_dataset_path": "/Users/oscar/Documents/GitHub/ml-nutraceuticos-ganado-lechero/data/raw/csv/dataset_vacas_24m_v2.csv",
   "raw_rows": 73000,
   "raw_cols": 35,
   "processed_rows": 73000,
