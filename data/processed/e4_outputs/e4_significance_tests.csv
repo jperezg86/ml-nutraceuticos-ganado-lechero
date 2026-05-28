@@ -1,0 +1,8 @@
+Modelo,RMSE,CI_2.5,CI_97.5,t_stat,p_value,Significativo,CI_overlap,Mejor_que_E3
+ElasticNet,0.8395,0.82,0.8602,-14.642,0.0,Sí ✅,No,No
+BayesianRidge,0.7268,0.7175,0.737,-16.018,0.0,Sí ✅,Sí (tied),No
+MLP,0.6555,0.6476,0.6643,13.492,0.0,Sí ✅,No,Sí ✅
+XGBoost,1.1858,1.1374,1.2337,-15.689,0.0,Sí ✅,No,No
+IPCC-Baseline,4.7261,4.6802,4.7756,-97.523,0.0,Sí ✅,No,No
+MLP_tuned,0.6776,0.6694,0.6868,8.288,0.0,Sí ✅,No,Sí ✅
+BayesianRidge_tuned,0.7268,0.7175,0.737,-16.018,0.0,Sí ✅,Sí (tied),No
