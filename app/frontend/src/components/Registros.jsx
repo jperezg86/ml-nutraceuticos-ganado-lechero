@@ -8,19 +8,33 @@ const API = '/api'
 
 const NIVEL_COLOR = { Bajo: '#00c896', Medio: '#ffc857', Alto: '#ff5757' }
 
-// Campos que el usuario llena directamente
-const CAMPOS = [
-  { key: 'leche_kg_dia',        label: 'Leche kg/día',         default: 25,   step: 0.1 },
-  { key: 'consumo_ms_kg',       label: 'Consumo MS kg',         default: 20,   step: 0.1 },
-  { key: 'fcr',                 label: 'FCR',                   default: 1.2,  step: 0.01 },
-  { key: 'temp_humedad_idx',    label: 'THI (índice termohum)', default: 72,   step: 0.1 },
-  { key: 'humedad_pct',         label: 'Humedad %',             default: 65,   step: 1 },
-  { key: 'peso_kg',             label: 'Peso kg',               default: 550,  step: 1 },
-  { key: 'edad_meses',          label: 'Edad (meses)',          default: 36,   step: 1 },
-  { key: 'numero_lactancia',    label: 'N° lactancia',          default: 2,    step: 1 },
-  { key: 'fibra_pct',           label: 'Fibra %',               default: 18,   step: 0.1 },
-  { key: 'proteina_dieta_pct',  label: 'Proteína dieta %',     default: 16.5, step: 0.1 },
+// ── Sección 1: Parámetros productivos y ambientales ──────────────────────────
+const CAMPOS_PROD = [
+  { key: 'leche_kg_dia',        label: 'Leche kg/día',          default: 25,   step: 0.1 },
+  { key: 'consumo_ms_kg',       label: 'Consumo MS kg',          default: 20,   step: 0.1 },
+  { key: 'fcr',                 label: 'FCR',                    default: 1.2,  step: 0.01 },
+  { key: 'peso_kg',             label: 'Peso kg',                default: 550,  step: 1 },
+  { key: 'edad_meses',          label: 'Edad (meses)',           default: 36,   step: 1 },
+  { key: 'numero_lactancia',    label: 'N° lactancia',           default: 2,    step: 1 },
+  { key: 'temp_humedad_idx',    label: 'THI (índice termohum)',  default: 72,   step: 0.1 },
+  { key: 'humedad_pct',         label: 'Humedad %',              default: 65,   step: 1 },
 ]
+
+// ── Sección 2: Composición de la dieta ───────────────────────────────────────
+const CAMPOS_DIETA = [
+  { key: 'fibra_pct',           label: 'Fibra %',                default: 18,   step: 0.1 },
+  { key: 'proteina_dieta_pct',  label: 'Proteína dieta %',      default: 16.5, step: 0.1 },
+  { key: 'energia_mcal_kg',     label: 'Energía MCal/kg MS',     default: 3.8,  step: 0.01 },
+]
+
+// ── Sección 3: Nutraceuticos ──────────────────────────────────────────────────
+const CAMPOS_NUTRI = [
+  { key: 'omega3_mg_l',         label: 'Omega-3 mg/L',           default: 0,    step: 1 },
+  { key: 'antioxidantes_ppm',   label: 'Antioxidantes ppm',      default: 0,    step: 1 },
+]
+
+// Todos los campos numéricos (para inicializar el form state y armar el payload)
+const CAMPOS = [...CAMPOS_PROD, ...CAMPOS_DIETA, ...CAMPOS_NUTRI]
 
 /**
  * Ingeniería de variables — replica el pipeline del notebook E2/E3
@@ -28,19 +42,26 @@ const CAMPOS = [
  * Genera los 28 features que espera el modelo MLP.
  */
 function buildFeatures(vals, fecha) {
-  const leche    = parseFloat(vals.leche_kg_dia)       || 25
-  const consumo  = parseFloat(vals.consumo_ms_kg)      || 20
-  const fcr      = parseFloat(vals.fcr)                || 1.2
-  const thi      = parseFloat(vals.temp_humedad_idx)   || 72
-  const humedad  = parseFloat(vals.humedad_pct)        || 65
-  const peso     = parseFloat(vals.peso_kg)            || 550
-  const edad     = parseFloat(vals.edad_meses)         || 36
-  const nLact    = Math.max(1, parseFloat(vals.numero_lactancia) || 2)
-  const fibra    = parseFloat(vals.fibra_pct)          || 18
-  const proteina = parseFloat(vals.proteina_dieta_pct) || 16.5
-  const energia  = 3.8   // MCal/kg — valor típico (no está en el form)
+  // ── Raw inputs del formulario ─────────────────────────────────────────────
+  const leche    = parseFloat(vals.leche_kg_dia)        || 25
+  const consumo  = parseFloat(vals.consumo_ms_kg)       || 20
+  const fcr      = parseFloat(vals.fcr)                 || 1.2
+  const thi      = parseFloat(vals.temp_humedad_idx)    || 72
+  const humedad  = parseFloat(vals.humedad_pct)         || 65
+  const peso     = parseFloat(vals.peso_kg)             || 550
+  const edad     = parseFloat(vals.edad_meses)          || 36
+  const nLact    = Math.max(1, parseFloat(vals.numero_lactancia)    || 2)
+  const fibra    = parseFloat(vals.fibra_pct)           || 18
+  const proteina = parseFloat(vals.proteina_dieta_pct)  || 16.5
+  // Nuevos campos (antes hardcodeados)
+  const energia  = parseFloat(vals.energia_mcal_kg)     || 3.8
+  const omega3   = parseFloat(vals.omega3_mg_l)         || 0
+  const antiox   = parseFloat(vals.antioxidantes_ppm)   || 0
+  const taninos  = Number(vals.tiene_taninos)           || 0  // 0 o 1
+  const algas    = Number(vals.tiene_algas)             || 0  // 0 o 1
+  const sistProd = Number(vals.sistema_produccion)              // 0=Ext, 1=Semi, 2=Int
 
-  // ── Features derivadas (igual que notebook E2 feature engineering) ──────
+  // ── Features derivadas (igual que notebook E2 feature engineering) ────────
   const estres         = thi >= 72 ? 1 : 0
   const thi_bin        = thi >= 72 ? 1 : 0
   const thi_stress     = thi * estres
@@ -51,6 +72,8 @@ function buildFeatures(vals, fecha) {
   const ratio_fib_prot = proteina > 0 ? fibra / proteina : 1.1
   const ratio_prot_ene = energia  > 0 ? proteina / energia : 4.34
   const leche_lact     = leche * nLact   // proxy de producción total por lactancia
+  const omega3_leche   = leche  > 0 ? omega3 / leche : 0
+  const combo_anti     = taninos + algas  // 0, 1 ó 2
 
   // Ciclicidad temporal: extraer mes de la fecha del registro
   const d   = fecha ? new Date(fecha) : new Date()
@@ -82,19 +105,93 @@ function buildFeatures(vals, fecha) {
     ratio_fibra_proteina:   ratio_fib_prot,
     edad_est_ord:           edad_ord,
     fcr_bin_ord:            fcr_bin,
-    sistema_prod_ord:       1,   // semi-intensivo (mediana del dataset)
+    sistema_prod_ord:       sistProd,
     // ── Ciclicidad temporal ──
     mes_sin,
     mes_cos,
-    // ── Nutraceuticos (0 = sin tratamiento — se actualizará si se agrega al form) ──
-    omega3_mg_l:            0,
-    omega3_por_leche:       0,
-    antioxidantes_ppm:      0,
-    tiene_taninos:          0,
-    tiene_algas:            0,
-    combo_anti_metano:      0,
+    // ── Nutraceuticos ──
+    omega3_mg_l:            omega3,
+    omega3_por_leche:       omega3_leche,
+    antioxidantes_ppm:      antiox,
+    tiene_taninos:          taninos,
+    tiene_algas:            algas,
+    combo_anti_metano:      combo_anti,
   }
 }
+
+// ── Componentes helper del formulario ────────────────────────────────────────
+
+function SectionLabel({ children, style }) {
+  return (
+    <div style={{
+      fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
+      color: 'var(--text-3)', marginBottom: 10, ...style,
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function ToggleChip({ label, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+        border: `1px solid ${active ? '#00c896' : 'rgba(255,255,255,0.12)'}`,
+        background: active ? 'rgba(0,200,150,0.15)' : 'var(--surface-2)',
+        color: active ? '#00c896' : 'var(--text-2)',
+        transition: 'all 0.15s',
+      }}
+    >
+      {active ? '✓ ' : ''}{label}
+    </button>
+  )
+}
+
+function AutoCalcInfo({ form }) {
+  const proteina = parseFloat(form.proteina_dieta_pct) || 16.5
+  const energia  = parseFloat(form.energia_mcal_kg)    || 3.8
+  const fibra    = parseFloat(form.fibra_pct)          || 18
+  const leche    = parseFloat(form.leche_kg_dia)       || 25
+  const omega3   = parseFloat(form.omega3_mg_l)        || 0
+  const thi      = parseFloat(form.temp_humedad_idx)   || 72
+
+  const ratioFibProt  = proteina > 0 ? (fibra / proteina).toFixed(3) : '—'
+  const ratioProtEne  = energia  > 0 ? (proteina / energia).toFixed(3) : '—'
+  const omega3Leche   = leche > 0 ? (omega3 / leche).toFixed(4) : '0.0000'
+  const comboAnti     = (Number(form.tiene_taninos) + Number(form.tiene_algas))
+  const estres        = thi >= 72 ? 'Sí' : 'No'
+
+  return (
+    <div style={{
+      marginTop: 16, padding: '12px 16px', borderRadius: 8,
+      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+    }}>
+      <div style={{fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-3)', marginBottom: 8}}>
+        ⚙️ Variables auto-calculadas para el modelo
+      </div>
+      <div style={{display: 'flex', flexWrap: 'wrap', gap: '6px 20px'}}>
+        {[
+          ['ratio_fibra_proteina',   ratioFibProt],
+          ['ratio_proteina_energia', ratioProtEne],
+          ['omega3_por_leche',       omega3Leche],
+          ['combo_anti_metano',      comboAnti],
+          ['estres_termico',         estres],
+        ].map(([k, v]) => (
+          <span key={k} style={{fontSize: 11, color: 'var(--text-3)'}}>
+            <span style={{color: 'var(--text-2)', fontWeight: 600}}>{k}</span>
+            {' = '}
+            <span style={{color: '#ffc857'}}>{v}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function Registros({ onGoToVaca }) {
   const [tab, setTab]         = useState('nuevo')
@@ -107,7 +204,15 @@ export default function Registros({ onGoToVaca }) {
   const [msg, setMsg]         = useState(null)   // {type: 'ok'|'err', text, pred}
 
   const [form, setForm] = useState(() => {
-    const f = { id_vaca: '', fecha: new Date().toISOString().split('T')[0], notas: '' }
+    const f = {
+      id_vaca: '',
+      fecha: new Date().toISOString().split('T')[0],
+      notas: '',
+      // Campos especiales (no numéricos simples)
+      sistema_produccion: 1,   // 0=Extensivo, 1=Semi-intensivo, 2=Intensivo
+      tiene_taninos: 0,
+      tiene_algas: 0,
+    }
     CAMPOS.forEach(c => { f[c.key] = c.default })
     return f
   })
@@ -275,12 +380,43 @@ export default function Registros({ onGoToVaca }) {
               </div>
             </div>
 
-            {/* Features principales */}
-            <div style={{fontSize:11, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:10}}>
-              Parámetros productivos
-            </div>
+            {/* ── Sección 1: Producción y Animal ─────────────────────────── */}
+            <SectionLabel>🐄 Producción y animal</SectionLabel>
             <div className="form-row">
-              {CAMPOS.map(c => (
+              {CAMPOS_PROD.map(c => (
+                <div className="form-group" key={c.key}>
+                  <label>{c.label}</label>
+                  <input
+                    type="number"
+                    step={c.step}
+                    value={form[c.key]}
+                    onChange={e => handleField(c.key, e.target.value)}
+                  />
+                </div>
+              ))}
+              {/* Sistema de producción (select) */}
+              <div className="form-group">
+                <label>Sistema de producción</label>
+                <select
+                  value={form.sistema_produccion}
+                  onChange={e => handleField('sistema_produccion', parseInt(e.target.value))}
+                  style={{
+                    background:'var(--surface-2)', color:'var(--text-1)',
+                    border:'1px solid rgba(255,255,255,0.1)', borderRadius:8,
+                    padding:'8px 10px', fontSize:13, width:'100%',
+                  }}
+                >
+                  <option value={0}>Extensivo</option>
+                  <option value={1}>Semi-intensivo</option>
+                  <option value={2}>Intensivo</option>
+                </select>
+              </div>
+            </div>
+
+            {/* ── Sección 2: Dieta ────────────────────────────────────────── */}
+            <SectionLabel style={{marginTop:20}}>🌾 Composición de la dieta</SectionLabel>
+            <div className="form-row">
+              {CAMPOS_DIETA.map(c => (
                 <div className="form-group" key={c.key}>
                   <label>{c.label}</label>
                   <input
@@ -292,6 +428,41 @@ export default function Registros({ onGoToVaca }) {
                 </div>
               ))}
             </div>
+
+            {/* ── Sección 3: Nutraceuticos ─────────────────────────────────── */}
+            <SectionLabel style={{marginTop:20}}>💊 Nutraceuticos</SectionLabel>
+            <div className="form-row" style={{alignItems:'flex-end'}}>
+              {CAMPOS_NUTRI.map(c => (
+                <div className="form-group" key={c.key}>
+                  <label>{c.label}</label>
+                  <input
+                    type="number"
+                    step={c.step}
+                    value={form[c.key]}
+                    onChange={e => handleField(c.key, e.target.value)}
+                  />
+                </div>
+              ))}
+              {/* Toggles: Taninos y Algas */}
+              <div className="form-group">
+                <label style={{marginBottom:10}}>Suplementos activos</label>
+                <div style={{display:'flex', gap:10}}>
+                  <ToggleChip
+                    label="Taninos"
+                    active={!!form.tiene_taninos}
+                    onClick={() => handleField('tiene_taninos', form.tiene_taninos ? 0 : 1)}
+                  />
+                  <ToggleChip
+                    label="Algas"
+                    active={!!form.tiene_algas}
+                    onClick={() => handleField('tiene_algas', form.tiene_algas ? 0 : 1)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Variables auto-calculadas (info) */}
+            <AutoCalcInfo form={form} />
 
             {/* Botón */}
             <div style={{display:'flex', alignItems:'center', gap:12, marginTop:6}}>
