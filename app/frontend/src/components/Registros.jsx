@@ -8,31 +8,92 @@ const API = '/api'
 
 const NIVEL_COLOR = { Bajo: '#00c896', Medio: '#ffc857', Alto: '#ff5757' }
 
+// Campos que el usuario llena directamente
 const CAMPOS = [
-  { key: 'leche_kg_dia',        label: 'Leche kg/día',       default: 25,   step: 0.1 },
-  { key: 'fcr',                 label: 'FCR',                 default: 1.2,  step: 0.01 },
-  { key: 'temp_humedad_idx',    label: 'Temp-Humedad (THI)',  default: 72,   step: 0.1 },
-  { key: 'peso_kg',             label: 'Peso kg',             default: 550,  step: 1 },
-  { key: 'edad_meses',          label: 'Edad (meses)',        default: 36,   step: 1 },
-  { key: 'fibra_pct',           label: 'Fibra %',             default: 18,   step: 0.1 },
-  { key: 'proteina_dieta_pct',  label: 'Proteína dieta %',   default: 16.5, step: 0.1 },
-  { key: 'consumo_ms_kg',       label: 'Consumo MS kg',       default: 20,   step: 0.1 },
+  { key: 'leche_kg_dia',        label: 'Leche kg/día',         default: 25,   step: 0.1 },
+  { key: 'consumo_ms_kg',       label: 'Consumo MS kg',         default: 20,   step: 0.1 },
+  { key: 'fcr',                 label: 'FCR',                   default: 1.2,  step: 0.01 },
+  { key: 'temp_humedad_idx',    label: 'THI (índice termohum)', default: 72,   step: 0.1 },
+  { key: 'humedad_pct',         label: 'Humedad %',             default: 65,   step: 1 },
+  { key: 'peso_kg',             label: 'Peso kg',               default: 550,  step: 1 },
+  { key: 'edad_meses',          label: 'Edad (meses)',          default: 36,   step: 1 },
+  { key: 'numero_lactancia',    label: 'N° lactancia',          default: 2,    step: 1 },
+  { key: 'fibra_pct',           label: 'Fibra %',               default: 18,   step: 0.1 },
+  { key: 'proteina_dieta_pct',  label: 'Proteína dieta %',     default: 16.5, step: 0.1 },
 ]
 
-const FEAT_REG = [
-  'edad_meses','ratio_proteina_energia','numero_lactancia','leche_por_lactancia',
-  'omega3_por_leche','antioxidantes_ppm','tiene_taninos','tiene_algas','combo_anti_metano',
-  'sistema_prod_ord','leche_kg_dia','proteina_dieta_pct','fibra_pct','consumo_ms_kg',
-  'estres_termico','edad_est_ord','fcr_bin_ord','humedad_pct','peso_kg','fcr','thi_bin_ord',
-  'temp_humedad_idx','thi_stress_load','ratio_fibra_proteina','mes_sin','indice_thi',
-  'omega3_mg_l','mes_cos',
-]
+/**
+ * Ingeniería de variables — replica el pipeline del notebook E2/E3
+ * a partir de los valores raw del formulario.
+ * Genera los 28 features que espera el modelo MLP.
+ */
+function buildFeatures(vals, fecha) {
+  const leche    = parseFloat(vals.leche_kg_dia)       || 25
+  const consumo  = parseFloat(vals.consumo_ms_kg)      || 20
+  const fcr      = parseFloat(vals.fcr)                || 1.2
+  const thi      = parseFloat(vals.temp_humedad_idx)   || 72
+  const humedad  = parseFloat(vals.humedad_pct)        || 65
+  const peso     = parseFloat(vals.peso_kg)            || 550
+  const edad     = parseFloat(vals.edad_meses)         || 36
+  const nLact    = Math.max(1, parseFloat(vals.numero_lactancia) || 2)
+  const fibra    = parseFloat(vals.fibra_pct)          || 18
+  const proteina = parseFloat(vals.proteina_dieta_pct) || 16.5
+  const energia  = 3.8   // MCal/kg — valor típico (no está en el form)
 
-function buildFeatures(vals) {
-  const base = {}
-  FEAT_REG.forEach(f => { base[f] = 0 })
-  CAMPOS.forEach(c => { base[c.key] = parseFloat(vals[c.key]) || 0 })
-  return base
+  // ── Features derivadas (igual que notebook E2 feature engineering) ──────
+  const estres         = thi >= 72 ? 1 : 0
+  const thi_bin        = thi >= 72 ? 1 : 0
+  const thi_stress     = thi * estres
+  // Ordinal de edad: 0=cría(≤24m), 1=novilla(≤48m), 2=adulta(≤72m), 3=madura(>72m)
+  const edad_ord       = edad <= 24 ? 0 : edad <= 48 ? 1 : edad <= 72 ? 2 : 3
+  // Ordinal de FCR por cuartiles aproximados del dataset
+  const fcr_bin        = fcr < 0.85 ? 0 : fcr < 1.05 ? 1 : fcr < 1.30 ? 2 : 3
+  const ratio_fib_prot = proteina > 0 ? fibra / proteina : 1.1
+  const ratio_prot_ene = energia  > 0 ? proteina / energia : 4.34
+  const leche_lact     = leche * nLact   // proxy de producción total por lactancia
+
+  // Ciclicidad temporal: extraer mes de la fecha del registro
+  const d   = fecha ? new Date(fecha) : new Date()
+  const mes = d.getMonth() + 1  // 1–12
+  const mes_sin = parseFloat(Math.sin(2 * Math.PI * mes / 12).toFixed(6))
+  const mes_cos = parseFloat(Math.cos(2 * Math.PI * mes / 12).toFixed(6))
+
+  return {
+    // ── Básicas ──
+    edad_meses:             edad,
+    leche_kg_dia:           leche,
+    peso_kg:                peso,
+    consumo_ms_kg:          consumo,
+    fibra_pct:              fibra,
+    proteina_dieta_pct:     proteina,
+    humedad_pct:            humedad,
+    fcr:                    fcr,
+    // ── Derivadas de THI ──
+    temp_humedad_idx:       thi,
+    indice_thi:             thi,
+    estres_termico:         estres,
+    thi_bin_ord:            thi_bin,
+    thi_stress_load:        thi_stress,
+    // ── Derivadas de lactancia / producción ──
+    numero_lactancia:       nLact,
+    leche_por_lactancia:    leche_lact,
+    // ── Ratios y ordinales ──
+    ratio_proteina_energia: ratio_prot_ene,
+    ratio_fibra_proteina:   ratio_fib_prot,
+    edad_est_ord:           edad_ord,
+    fcr_bin_ord:            fcr_bin,
+    sistema_prod_ord:       1,   // semi-intensivo (mediana del dataset)
+    // ── Ciclicidad temporal ──
+    mes_sin,
+    mes_cos,
+    // ── Nutraceuticos (0 = sin tratamiento — se actualizará si se agrega al form) ──
+    omega3_mg_l:            0,
+    omega3_por_leche:       0,
+    antioxidantes_ppm:      0,
+    tiene_taninos:          0,
+    tiene_algas:            0,
+    combo_anti_metano:      0,
+  }
 }
 
 export default function Registros({ onGoToVaca }) {
@@ -78,12 +139,14 @@ export default function Registros({ onGoToVaca }) {
     setSub(true)
     setMsg(null)
     try {
+      const features = buildFeatures(form, form.fecha)
       const payload = {
         id_vaca:  form.id_vaca || null,
         fecha:    form.fecha,
         notas:    form.notas,
         fuente:   'manual',
-        features: buildFeatures(form),
+        features,
+        // Campos raw para guardar en la tabla registros
         ...CAMPOS.reduce((acc, c) => { acc[c.key] = parseFloat(form[c.key]) || 0; return acc }, {}),
       }
       const res  = await fetch(`${API}/registros`, {
