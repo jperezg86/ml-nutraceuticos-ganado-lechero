@@ -553,9 +553,50 @@ function TabTendencia({ stats }) {
   )
 }
 
-// ── Tab 3: Scatter ────────────────────────────────────────────────────────────
+// ── Tab 3: Cruce de Variables con selector de tipo ───────────────────────────
+
+const CHART_TYPES = [
+  { id: 'scatter', label: '⬡ Dispersión' },
+  { id: 'histo',   label: '▬ Distribución' },
+  { id: 'barras',  label: '▨ Por Raza'    },
+]
+
+// Construye histograma de un array de valores numéricos
+function buildHistogram(values, bins = 28) {
+  const valid = values.filter(v => v != null && isFinite(v))
+  if (!valid.length) return []
+  const min = Math.min(...valid)
+  const max = Math.max(...valid)
+  const step = (max - min) / bins || 1
+  const buckets = Array.from({ length: bins }, (_, i) => ({
+    x: parseFloat((min + i * step).toFixed(2)),
+    n: 0,
+  }))
+  valid.forEach(v => {
+    const idx = Math.min(Math.floor((v - min) / step), bins - 1)
+    buckets[idx].n++
+  })
+  return buckets
+}
+
+// Agrupa por raza y calcula promedio de la variable Y
+function buildByRaza(data) {
+  const groups = {}
+  data.forEach(d => {
+    const r = d.raza || 'Sin raza'
+    if (!groups[r]) groups[r] = { raza: r, sum: 0, n: 0, alto: 0, bajo: 0 }
+    groups[r].sum += d.y_col ?? 0
+    groups[r].n++
+    if (d.nivel_emision === 'Alto')  groups[r].alto++
+    if (d.nivel_emision === 'Bajo')  groups[r].bajo++
+  })
+  return Object.values(groups)
+    .map(g => ({ ...g, promedio: parseFloat((g.sum / g.n).toFixed(3)) }))
+    .sort((a, b) => b.promedio - a.promedio)
+}
 
 function TabScatter() {
+  const [chartType, setChartType] = useState('scatter')
   const [xVar,   setXVar]   = useState('leche_kg_dia')
   const [yVar,   setYVar]   = useState('intensidad_metano')
   const [raza,   setRaza]   = useState('Todas')
@@ -567,7 +608,9 @@ function TabScatter() {
     setLoading(true)
     setError(null)
     const razaParam = raza !== 'Todas' ? `&raza=${encodeURIComponent(raza)}` : ''
-    fetch(`${API}/hato/scatter?x=${xVar}&y=${yVar}${razaParam}`)
+    // Para distribución solo necesitamos Y; para barras por raza, fetcheamos sin filtro de raza
+    const xQ = chartType === 'histo' ? yVar : xVar
+    fetch(`${API}/hato/scatter?x=${xQ}&y=${yVar}${razaParam}&limit=5000`)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         return r.json()
@@ -575,102 +618,269 @@ function TabScatter() {
       .then(d => setData(d.data || []))
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
-  }, [xVar, yVar, raza])
+  }, [xVar, yVar, raza, chartType])
 
   useEffect(() => { fetchScatter() }, [fetchScatter])
-
-  const byNivel = ['Bajo', 'Medio', 'Alto'].map(n => ({
-    nivel: n,
-    points: data.filter(d => d.nivel_emision === n),
-  })).filter(g => g.points.length > 0)
 
   const xLabel = SCATTER_VARS.find(v => v.value === xVar)?.label || xVar
   const yLabel = SCATTER_VARS.find(v => v.value === yVar)?.label || yVar
 
+  // Datos derivados según tipo
+  const byNivel   = ['Bajo', 'Medio', 'Alto'].map(n => ({
+    nivel: n, points: data.filter(d => d.nivel_emision === n),
+  })).filter(g => g.points.length > 0)
+
+  const histData  = buildHistogram(data.map(d => d.y_col))
+  const razaData  = buildByRaza(data)
+
+  // Color para barras de histograma según posición del eje Y
+  function histColor(x) {
+    if (yVar === 'intensidad_metano') {
+      if (x > 25) return '#ff5757'
+      if (x > 18) return '#ffc857'
+      return '#00c896'
+    }
+    return '#4b9dff'
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Controls */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ color: 'var(--text-3)', fontSize: 11 }}>Eje X</label>
-          <Select
-            value={xVar}
-            onChange={setXVar}
-            options={SCATTER_VARS}
-          />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ color: 'var(--text-3)', fontSize: 11 }}>Eje Y</label>
-          <Select
-            value={yVar}
-            onChange={setYVar}
-            options={SCATTER_VARS}
-          />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ color: 'var(--text-3)', fontSize: 11 }}>Raza</label>
-          <Select
-            value={raza}
-            onChange={setRaza}
-            options={RAZAS.map(r => ({ value: r, label: r }))}
-          />
-        </div>
-        <div style={{ alignSelf: 'flex-end', color: 'var(--text-3)', fontSize: 12 }}>
+
+      {/* ── Selector de tipo de gráfica ── */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        {CHART_TYPES.map(ct => (
+          <button
+            key={ct.id}
+            onClick={() => setChartType(ct.id)}
+            style={{
+              padding: '7px 16px',
+              borderRadius: 8,
+              border: '1px solid',
+              borderColor: chartType === ct.id ? 'var(--accent)' : 'var(--border)',
+              background: chartType === ct.id ? 'rgba(0,200,150,0.12)' : 'var(--bg-card-2)',
+              color: chartType === ct.id ? 'var(--accent)' : 'var(--text-2)',
+              fontSize: 13,
+              fontWeight: chartType === ct.id ? 700 : 400,
+              cursor: 'pointer',
+              fontFamily: 'var(--font)',
+              transition: 'all 0.15s',
+            }}
+          >
+            {ct.label}
+          </button>
+        ))}
+        <span style={{ color: 'var(--text-3)', fontSize: 12, marginLeft: 4 }}>
           {data.length.toLocaleString()} puntos
-        </div>
+        </span>
       </div>
 
-      {error && <div className="error-box">Error al cargar scatter: {error}</div>}
+      {/* ── Controles de variables ── */}
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        {chartType === 'scatter' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={{ color: 'var(--text-3)', fontSize: 11 }}>Eje X</label>
+            <Select value={xVar} onChange={setXVar} options={SCATTER_VARS} />
+          </div>
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ color: 'var(--text-3)', fontSize: 11 }}>
+            {chartType === 'scatter' ? 'Eje Y' : 'Variable'}
+          </label>
+          <Select value={yVar} onChange={setYVar} options={SCATTER_VARS} />
+        </div>
+        {chartType !== 'barras' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={{ color: 'var(--text-3)', fontSize: 11 }}>Raza</label>
+            <Select
+              value={raza}
+              onChange={setRaza}
+              options={RAZAS.map(r => ({ value: r, label: r }))}
+            />
+          </div>
+        )}
+      </div>
 
+      {error && <div className="error-box">Error: {error}</div>}
+
+      {/* ── Gráfica ── */}
       <div className="card">
+        {/* Título dinámico */}
         <div className="card-title">
-          {yLabel} vs {xLabel}
-          <span style={{ color: 'var(--text-3)', fontWeight: 400, fontSize: 12, marginLeft: 8 }}>
-            · colorear por nivel de emisión
-          </span>
+          {chartType === 'scatter' && (
+            <>{yLabel} vs {xLabel}
+              <span style={{ color: 'var(--text-3)', fontWeight: 400, fontSize: 12, marginLeft: 8 }}>
+                · coloreado por nivel de emisión
+              </span>
+            </>
+          )}
+          {chartType === 'histo' && (
+            <>Distribución — {yLabel}</>
+          )}
+          {chartType === 'barras' && (
+            <>Promedio de {yLabel} por Raza</>
+          )}
         </div>
 
         {loading ? (
           <div style={{ height: 380 }}><Spinner /></div>
         ) : (
-          <ResponsiveContainer width="100%" height={380}>
-            <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis
-                dataKey="x_col"
-                name={xLabel}
-                type="number"
-                tick={{ fill: '#545e78', fontSize: 11 }}
-                label={{ value: xLabel, position: 'insideBottom', offset: -10, fill: '#8890a8', fontSize: 12 }}
-              />
-              <YAxis
-                dataKey="y_col"
-                name={yLabel}
-                type="number"
-                tick={{ fill: '#545e78', fontSize: 11 }}
-                label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: 10, fill: '#8890a8', fontSize: 12 }}
-              />
-              <Tooltip
-                contentStyle={tooltipStyle.contentStyle}
-                cursor={{ strokeDasharray: '3 3' }}
-                formatter={(v, name) => [fmt1(v), name]}
-              />
-              <Legend
-                formatter={name => name}
-                wrapperStyle={{ fontSize: 12, color: '#8890a8' }}
-              />
-              {byNivel.map(g => (
-                <Scatter
-                  key={g.nivel}
-                  name={g.nivel}
-                  data={g.points}
-                  fill={NIVEL_COLORS[g.nivel]}
-                  opacity={0.7}
-                  r={3}
-                />
-              ))}
-            </ScatterChart>
-          </ResponsiveContainer>
+          <>
+            {/* ── Dispersión (Scatter) ── */}
+            {chartType === 'scatter' && (
+              <ResponsiveContainer width="100%" height={380}>
+                <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis
+                    dataKey="x_col" name={xLabel} type="number"
+                    tick={{ fill: '#545e78', fontSize: 11 }}
+                    label={{ value: xLabel, position: 'insideBottom', offset: -10, fill: '#8890a8', fontSize: 12 }}
+                  />
+                  <YAxis
+                    dataKey="y_col" name={yLabel} type="number"
+                    tick={{ fill: '#545e78', fontSize: 11 }}
+                    label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: 10, fill: '#8890a8', fontSize: 12 }}
+                  />
+                  <Tooltip
+                    contentStyle={tooltipStyle.contentStyle}
+                    cursor={{ strokeDasharray: '3 3' }}
+                    formatter={(v, name) => [fmt1(v), name]}
+                  />
+                  <Legend formatter={name => name} wrapperStyle={{ fontSize: 12, color: '#8890a8' }} />
+                  {byNivel.map(g => (
+                    <Scatter key={g.nivel} name={g.nivel} data={g.points}
+                      fill={NIVEL_COLORS[g.nivel]} opacity={0.7} r={3} />
+                  ))}
+                </ScatterChart>
+              </ResponsiveContainer>
+            )}
+
+            {/* ── Distribución (Histograma) ── */}
+            {chartType === 'histo' && (
+              <>
+                <div style={{ color: 'var(--text-3)', fontSize: 12, marginBottom: 10 }}>
+                  Frecuencia de valores · {data.length.toLocaleString()} registros
+                  {raza !== 'Todas' && ` · ${raza}`}
+                </div>
+                <ResponsiveContainer width="100%" height={340}>
+                  <BarChart data={histData} margin={{ top: 8, right: 16, bottom: 20, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis
+                      dataKey="x"
+                      tick={{ fill: '#545e78', fontSize: 10 }}
+                      tickFormatter={v => fmt1(v)}
+                      label={{ value: yLabel, position: 'insideBottom', offset: -12, fill: '#8890a8', fontSize: 12 }}
+                    />
+                    <YAxis tick={{ fill: '#545e78', fontSize: 11 }} />
+                    <Tooltip
+                      contentStyle={tooltipStyle.contentStyle}
+                      formatter={(v, name) => [v.toLocaleString(), 'Frecuencia']}
+                      labelFormatter={v => `${yLabel}: ~${fmt1(v)}`}
+                    />
+                    <Bar dataKey="n" radius={[3, 3, 0, 0]}>
+                      {histData.map((entry, i) => (
+                        <Cell key={i} fill={histColor(entry.x)} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+                {/* Estadísticas rápidas */}
+                {data.length > 0 && (() => {
+                  const vals = data.map(d => d.y_col).filter(v => v != null)
+                  const mean = vals.reduce((s, v) => s + v, 0) / vals.length
+                  const std  = Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length)
+                  return (
+                    <div style={{ display: 'flex', gap: 24, marginTop: 14, flexWrap: 'wrap' }}>
+                      {[
+                        ['Media',  fmt1(mean)],
+                        ['Desv. est.', fmt1(std)],
+                        ['Mín', fmt1(Math.min(...vals))],
+                        ['Máx', fmt1(Math.max(...vals))],
+                        ['N', vals.length.toLocaleString()],
+                      ].map(([label, val]) => (
+                        <div key={label}>
+                          <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{label}</div>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-1)' }}>{val}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+              </>
+            )}
+
+            {/* ── Barras por raza ── */}
+            {chartType === 'barras' && (
+              <>
+                <div style={{ color: 'var(--text-3)', fontSize: 12, marginBottom: 10 }}>
+                  Promedio de {yLabel} por raza · {data.length.toLocaleString()} registros totales
+                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={razaData} margin={{ top: 8, right: 24, bottom: 8, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="raza" tick={{ fill: '#8890a8', fontSize: 12 }} />
+                    <YAxis tick={{ fill: '#545e78', fontSize: 11 }}
+                      label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: 14, fill: '#8890a8', fontSize: 11 }}
+                    />
+                    <Tooltip
+                      contentStyle={tooltipStyle.contentStyle}
+                      formatter={(v, name) => [
+                        fmt1(v),
+                        name === 'promedio' ? `Promedio ${yLabel}` : name,
+                      ]}
+                    />
+                    <Bar dataKey="promedio" radius={[6, 6, 0, 0]}>
+                      {razaData.map((entry, i) => (
+                        <Cell
+                          key={i}
+                          fill={
+                            yVar === 'intensidad_metano'
+                              ? (entry.promedio > 25 ? '#ff5757' : entry.promedio > 18 ? '#ffc857' : '#00c896')
+                              : ['#4b9dff', '#a78bfa', '#34d399', '#fb923c'][i % 4]
+                          }
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+
+                {/* Tabla resumen por raza */}
+                <div className="data-table-wrapper" style={{ marginTop: 16 }}>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Raza</th>
+                        <th style={{ textAlign: 'right' }}>N registros</th>
+                        <th style={{ textAlign: 'right' }}>Promedio {yLabel}</th>
+                        <th style={{ textAlign: 'right' }}>Alertas (Alto)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {razaData.map(r => (
+                        <tr key={r.raza}>
+                          <td style={{ fontWeight: 600, color: 'var(--text-1)' }}>{r.raza}</td>
+                          <td style={{ textAlign: 'right', color: 'var(--text-2)' }}>
+                            {r.n.toLocaleString()}
+                          </td>
+                          <td style={{
+                            textAlign: 'right',
+                            fontWeight: 600,
+                            color: yVar === 'intensidad_metano'
+                              ? (r.promedio > 25 ? '#ff5757' : r.promedio > 18 ? '#ffc857' : '#00c896')
+                              : 'var(--text-1)',
+                          }}>
+                            {fmt1(r.promedio)}
+                          </td>
+                          <td style={{ textAlign: 'right', color: r.alto > 0 ? '#ff5757' : 'var(--text-3)' }}>
+                            {r.alto > 0 ? `🚨 ${r.alto}` : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </>
         )}
       </div>
     </div>
