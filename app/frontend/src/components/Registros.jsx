@@ -382,7 +382,8 @@ export default function Registros({ onGoToVaca }) {
                   <XAxis dataKey="fecha" tick={{fill:'#8890a8', fontSize:10}} />
                   <YAxis tick={{fill:'#8890a8', fontSize:11}} domain={['auto','auto']} />
                   <Tooltip
-                    contentStyle={{background:'#1a1d27', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, fontSize:12}}
+                    contentStyle={{background:'#1a1d27', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, fontSize:12, color:'#eef0f7'}}
+                    itemStyle={{color:'#c8cdd8'}}
                     formatter={(v) => [`${v} g CH₄/kg`, 'Media']}
                     labelStyle={{color:'#eef0f7'}}
                   />
@@ -410,7 +411,8 @@ export default function Registros({ onGoToVaca }) {
                   <XAxis dataKey="nivel" tick={{fill:'#8890a8', fontSize:12}} />
                   <YAxis tick={{fill:'#8890a8', fontSize:11}} />
                   <Tooltip
-                    contentStyle={{background:'#1a1d27', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, fontSize:12}}
+                    contentStyle={{background:'#1a1d27', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, fontSize:12, color:'#eef0f7'}}
+                    itemStyle={{color:'#c8cdd8'}}
                     cursor={{fill:'rgba(255,255,255,0.04)'}}
                   />
                   <Bar dataKey="count" radius={[6,6,0,0]}>

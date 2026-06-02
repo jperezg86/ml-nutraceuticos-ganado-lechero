@@ -18,8 +18,10 @@ const TOOLTIP_STYLE = {
     border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: 8,
     fontSize: 12,
+    color: '#eef0f7',
   },
   labelStyle: { color: '#eef0f7' },
+  itemStyle:  { color: '#c8cdd8' },
 }
 
 function metanoColor(val) {

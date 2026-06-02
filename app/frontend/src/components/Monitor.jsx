@@ -193,8 +193,9 @@ function ComparacionView() {
   const axisMax  = Math.ceil(Math.max(...allVals))
 
   const tooltipCfg = {
-    contentStyle: { background: '#1a1d27', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 },
+    contentStyle: { background: '#1a1d27', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12, color: '#eef0f7' },
     labelStyle:   { color: '#eef0f7' },
+    itemStyle:    { color: '#c8cdd8' },
   }
 
   return (
