@@ -593,3 +593,47 @@ body {
 .text-accent  { color: var(--accent); }
 .text-warn    { color: var(--warn); }
 .bold         { font-weight: 600; }
+
+/* ═══════════════════════════════════════════════════════════════
+   RECHARTS — tooltips en modo oscuro
+   Recharts inyecta colores inline en sus <span> internos,
+   por eso se necesita !important para sobreescribirlos.
+═══════════════════════════════════════════════════════════════ */
+
+/* Contenedor del tooltip */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #1a1d27 !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 8px !important;
+}
+
+/* Label/título del tooltip (eje X) */
+.recharts-tooltip-label {
+  color: #ffc857 !important;   /* amarillo */
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  margin-bottom: 4px !important;
+}
+
+/* Cada fila de ítem (nombre: valor) */
+.recharts-tooltip-item {
+  color: #eef0f7 !important;   /* blanco suave */
+  font-size: 12px !important;
+  padding: 2px 0 !important;
+}
+
+/* Nombre del ítem (izquierda) */
+.recharts-tooltip-item-name {
+  color: #c8cdd8 !important;
+}
+
+/* Valor del ítem (derecha) — más brillante */
+.recharts-tooltip-item-value {
+  color: #eef0f7 !important;
+  font-weight: 600 !important;
+}
+
+/* Separador ": " entre nombre y valor */
+.recharts-tooltip-item-separator {
+  color: #545e78 !important;
+}
