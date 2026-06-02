@@ -369,17 +369,17 @@ export default function Monitor() {
 
   // ── Tabs ──
   const TABS = [
-    { id: 'drift',   label: '📡 Monitor de Drift' },
-    { id: 'modelo',  label: '🔬 Predicción vs Real' },
+    { id: 'drift',   label: '📡 ¿Cambió el hato?' },
+    { id: 'modelo',  label: '🎯 ¿Qué tan preciso es?' },
   ]
 
   return (
     <div>
       {/* Header */}
       <div className="page-header">
-        <h1>Monitor</h1>
+        <h1>Estado del Modelo</h1>
         <p>
-          Detecta distributional shift y evalúa el ajuste del modelo contra valores reales
+          Verifica que el modelo sigue siendo preciso y detecta si los datos del hato han cambiado respecto al histórico.
         </p>
       </div>
 

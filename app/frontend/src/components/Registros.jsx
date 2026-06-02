@@ -284,12 +284,8 @@ export default function Registros({ onGoToVaca }) {
   return (
     <div>
       <div className="page-header">
-        <h1>Base de Datos
-          <span className="badge badge-green" style={{marginLeft:10}}>
-            SQLite local
-          </span>
-        </h1>
-        <p>Registra visitas de vacas, obtén predicciones automáticas y sigue el historial.</p>
+        <h1>Registrar Visita</h1>
+        <p>Ingresa los datos de la visita, el sistema predice el nivel de metano y guarda todo automáticamente.</p>
       </div>
 
       {/* Stats rápidos */}
@@ -332,8 +328,8 @@ export default function Registros({ onGoToVaca }) {
       {/* Tabs */}
       <div style={{display:'flex', gap:4, marginBottom:20}}>
         {[
-          ['nuevo',     '➕ Nuevo registro'],
-          ['historial', '📋 Historial'],
+          ['nuevo',     '✏️ Nueva visita'],
+          ['historial', '📋 Mis registros'],
           ['tendencia', '📈 Tendencia'],
         ].map(([id, label]) => (
           <button
@@ -349,7 +345,7 @@ export default function Registros({ onGoToVaca }) {
       {/* ── TAB: NUEVO REGISTRO ─────────────────────────────────────────────── */}
       {tab === 'nuevo' && (
         <div className="card">
-          <div className="card-title">Ingresar nueva visita</div>
+          <div className="card-title">Datos de la visita</div>
           <form onSubmit={handleSubmit}>
 
             {/* ID y fecha */}

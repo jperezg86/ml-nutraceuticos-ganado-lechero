@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
 import Sidebar from './components/Sidebar'
 import Dashboard from './components/Dashboard'
-import Predictor from './components/Predictor'
 import Explorer from './components/Explorer'
 import Monitor from './components/Monitor'
 import Registros from './components/Registros'
@@ -26,7 +25,6 @@ export default function App() {
   const renderTab = () => {
     switch (activeTab) {
       case 'dashboard':  return <Dashboard />
-      case 'predictor':  return <Predictor />
       case 'explorer':   return <Explorer initialVacaId={explorerVaca} onVacaOpen={() => setExplorerVaca(null)} />
       case 'monitor':    return <Monitor />
       case 'registros':  return <Registros onGoToVaca={goToVaca} />
