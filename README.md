@@ -236,3 +236,17 @@ rm app/db/metano.db && curl -X POST http://localhost:3001/api/import
 - **Pipeline raw-aware** — `pipeline_mlp_app.pkl` entrenado con datos sin escalar del SQLite
 - **Drift KS** — Kolmogorov-Smirnov 2024 vs 2025 confirma shift temporal
 - **App local-first** — sin dependencia de nube, sin Streamlit, SQLite embebido
+
+---
+
+## 📘 Manual de usuario
+
+El manual completo (12 páginas, tamaño carta, colores Tec de Monterrey) cubre:
+
+- Cómo arrancar la aplicación
+- Uso de cada una de las 4 pantallas con screenshots
+- Cómo ingresar una visita y leer la predicción
+- Tabla semáforo de niveles de emisión (Bajo / Medio / Alto)
+- Glosario: CH₄, FCR, THI, MLP, RMSE, R², Drift, Nutraceutico
+
+Generado con `python3 app/backend/scripts/build_pdf.py` (requiere `reportlab` y `Pillow`).
