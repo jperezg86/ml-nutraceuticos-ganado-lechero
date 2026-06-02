@@ -35,7 +35,7 @@ function buildFeatures(vals) {
   return base
 }
 
-export default function Registros() {
+export default function Registros({ onGoToVaca }) {
   const [tab, setTab]         = useState('nuevo')
   const [registros, setReg]   = useState([])
   const [dbStats, setDbStats] = useState(null)
@@ -93,7 +93,12 @@ export default function Registros() {
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      setMsg({ type: 'ok', text: `Registro guardado (#${data.registro?.id})`, pred: data.prediccion })
+      setMsg({
+        type:   'ok',
+        text:   `Registro guardado (#${data.registro?.id})`,
+        pred:   data.prediccion,
+        vacaId: form.id_vaca || null,
+      })
       fetchData()
     } catch (err) {
       setMsg({ type: 'err', text: err.message })
@@ -129,7 +134,7 @@ export default function Registros() {
           </div>
           <div className="kpi-card">
             <span className="kpi-label">Vacas únicas</span>
-            <span className="kpi-value">{dbStats.vacas_unicas ?? 0}</span>
+            <span className="kpi-value">{dbStats.vacas ?? 0}</span>
             <span className="kpi-sub">con ID registrado</span>
           </div>
           {predStats && (
@@ -263,6 +268,21 @@ export default function Registros() {
                         <div style={{fontSize:12, color:'var(--text-3)'}}>
                           Modelo: {msg.pred.model_used}
                         </div>
+                      </div>
+                    )}
+                    {/* Acceso directo al perfil de la vaca */}
+                    {msg.vacaId && onGoToVaca && (
+                      <div style={{marginTop:14, display:'flex', alignItems:'center', gap:10}}>
+                        <button
+                          className="btn btn-ghost"
+                          onClick={() => onGoToVaca(msg.vacaId)}
+                          style={{fontSize:13}}
+                        >
+                          🐄 Ver perfil de {msg.vacaId}
+                        </button>
+                        <span style={{fontSize:12, color:'var(--text-3)'}}>
+                          Ve al Explorador para ver el historial completo de esta vaca.
+                        </span>
                       </div>
                     )}
                   </div>

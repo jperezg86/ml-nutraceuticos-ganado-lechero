@@ -253,8 +253,38 @@ const predQ = {
   stats: db.prepare(`
     SELECT COUNT(*) AS total,
       ROUND(AVG(prediccion),3) AS media,
-      SUM(nivel_emision='Alto') AS alto
+      SUM(CASE WHEN nivel_emision='Alto'  THEN 1 ELSE 0 END) AS alto,
+      SUM(CASE WHEN nivel_emision='Medio' THEN 1 ELSE 0 END) AS medio,
+      SUM(CASE WHEN nivel_emision='Bajo'  THEN 1 ELSE 0 END) AS bajo,
+      MAX(creado_en) AS ultima
     FROM predicciones
+  `),
+  trend: db.prepare(`
+    SELECT substr(creado_en,1,10) AS fecha,
+      COUNT(*) AS n,
+      ROUND(AVG(prediccion),3) AS media_dia
+    FROM predicciones
+    GROUP BY substr(creado_en,1,10)
+    ORDER BY fecha DESC LIMIT 30
+  `),
+  comparacion: db.prepare(`
+    SELECT id, id_vaca, fecha, raza, intensidad_metano, prediccion_ml, nivel_emision
+    FROM registros
+    WHERE activo=1
+      AND intensidad_metano IS NOT NULL
+      AND prediccion_ml IS NOT NULL
+    ORDER BY RANDOM() LIMIT 1000
+  `),
+  sampleParaPredict: db.prepare(`
+    SELECT id, id_vaca, fecha, raza, nivel_emision, intensidad_metano,
+           leche_kg_dia, peso_kg, edad_meses, numero_lactancia,
+           fibra_pct, proteina_dieta_pct, consumo_ms_kg,
+           humedad_pct, indice_thi, temperatura_c
+    FROM registros
+    WHERE activo=1
+      AND intensidad_metano IS NOT NULL
+      AND leche_kg_dia IS NOT NULL
+    ORDER BY RANDOM() LIMIT 500
   `),
 }
 

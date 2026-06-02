@@ -100,12 +100,34 @@ function KpiCard({ label, value, sub, cls }) {
 
 // ── Tab 1: Vacas ───────────────────────────────────────────────────────────────
 
-function TabVacas({ vacas, loadingVacas }) {
+function TabVacas({ vacas, loadingVacas, initialVacaId, onVacaOpen }) {
   const [search, setSearch]       = useState('')
   const [razaFilter, setRazaFilter] = useState('Todas')
   const [selectedId, setSelectedId] = useState(null)
   const [perfil, setPerfil]       = useState(null)
   const [loadingPerfil, setLoadingPerfil] = useState(false)
+
+  // Cuando llega un initialVacaId (deep-link desde Registros), lo abrimos automáticamente
+  useEffect(() => {
+    if (initialVacaId && !loadingVacas) {
+      openVaca(initialVacaId)
+      if (onVacaOpen) onVacaOpen()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialVacaId, loadingVacas])
+
+  function openVaca(id) {
+    setSelectedId(id)
+    setPerfil(null)
+    setLoadingPerfil(true)
+    // Limpiar filtro de búsqueda para asegurarnos de que la vaca es visible
+    setSearch(String(id))
+    fetch(`${API}/hato/vaca/${encodeURIComponent(id)}`)
+      .then(r => r.json())
+      .then(d => setPerfil(d))
+      .catch(() => setPerfil({ error: true }))
+      .finally(() => setLoadingPerfil(false))
+  }
 
   const handleRowClick = useCallback((id) => {
     if (selectedId === id) {
@@ -113,14 +135,8 @@ function TabVacas({ vacas, loadingVacas }) {
       setPerfil(null)
       return
     }
-    setSelectedId(id)
-    setPerfil(null)
-    setLoadingPerfil(true)
-    fetch(`${API}/hato/vaca/${id}`)
-      .then(r => r.json())
-      .then(d => setPerfil(d))
-      .catch(() => setPerfil({ error: true }))
-      .finally(() => setLoadingPerfil(false))
+    openVaca(id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId])
 
   const filtered = (vacas || []).filter(v => {
@@ -663,13 +679,18 @@ function TabScatter() {
 
 // ── Root component ─────────────────────────────────────────────────────────────
 
-export default function Explorer() {
+export default function Explorer({ initialVacaId = null, onVacaOpen }) {
   const [tab, setTab]           = useState(0)
   const [stats, setStats]       = useState(null)
   const [vacas, setVacas]       = useState(null)
   const [loadingStats, setLoadingStats] = useState(true)
   const [loadingVacas, setLoadingVacas] = useState(true)
   const [errorStats, setErrorStats]     = useState(null)
+
+  // Si viene un deep-link, aseguramos que estamos en la tab de Vacas
+  useEffect(() => {
+    if (initialVacaId) setTab(0)
+  }, [initialVacaId])
 
   useEffect(() => {
     fetch(`${API}/hato/stats`)
@@ -766,7 +787,12 @@ export default function Explorer() {
 
       {/* Tab content */}
       {tab === 0 && (
-        <TabVacas vacas={vacas} loadingVacas={loadingVacas} />
+        <TabVacas
+          vacas={vacas}
+          loadingVacas={loadingVacas}
+          initialVacaId={initialVacaId}
+          onVacaOpen={onVacaOpen}
+        />
       )}
       {tab === 1 && (
         loadingStats

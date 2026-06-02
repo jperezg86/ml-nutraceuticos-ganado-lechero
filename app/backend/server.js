@@ -259,7 +259,15 @@ app.get('/api/hato/scatter', (req, res) => {
     sql += ' ORDER BY RANDOM() LIMIT ?';
     params.push(limit);
     const rows = DB.db.prepare(sql).all(...params);
-    res.json({ data: rows, x, y });
+    // Renombrar a x_col/y_col para que Recharts ScatterChart los encuentre
+    const data = rows.map(r => ({
+      x_col:         r[x],
+      y_col:         r[y],
+      raza:          r.raza,
+      id_vaca:       r.id_vaca,
+      nivel_emision: r.nivel_emision,
+    }));
+    res.json({ data, x, y });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -347,6 +355,30 @@ app.get('/api/drift/db', (req, res) => {
 app.get('/api/drift/historial', (req, res) => {
   try { res.json({ historial: DB.drift.historial.all() }); }
   catch(e) { res.status(500).json({ error: e.message }); }
+})
+
+// ═══════════════════════════════════════════════════════════════
+// PREDICCIONES — historial y estadísticas
+// ═══════════════════════════════════════════════════════════════
+app.get('/api/predicciones', (req, res) => {
+  try {
+    res.json({
+      predicciones: DB.pred.recientes.all(),
+      stats:        DB.pred.stats.get(),
+      trend:        DB.pred.trend.all(),
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+})
+
+// ═══════════════════════════════════════════════════════════════
+// COMPARACIÓN MODELO — predicción vs valor real (dataset procesado)
+// ═══════════════════════════════════════════════════════════════
+app.get('/api/comparacion', async (req, res) => {
+  try {
+    const n = parseInt(req.query.n) || 500;
+    const result = await runPython('compare_model.py', { repo_root: REPO_ROOT, n });
+    res.json(result);
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Start ──────────────────────────────────────────────────────────────────────
