@@ -20,8 +20,9 @@ import joblib
 pipeline = None
 pipeline_name = 'desconocido'
 for p_path, name in [
-    (repo/'data/processed/e5_outputs/pipeline_final_e5.pkl',   'E5-Final'),
-    (repo/'data/processed/baseline_outputs/pipeline_ridge_e3.pkl', 'E3-Ridge'),
+    (repo/'data/processed/e5_outputs/pipeline_final_e5.pkl',        'E5-Final'),
+    (repo/'data/processed/e4_outputs/pipeline_mlp_e4.pkl',          'E4-MLP'),
+    (repo/'data/processed/baseline_outputs/pipeline_ridge_e3.pkl',  'E3-Ridge'),
 ]:
     if p_path.exists():
         pipeline = joblib.load(p_path)

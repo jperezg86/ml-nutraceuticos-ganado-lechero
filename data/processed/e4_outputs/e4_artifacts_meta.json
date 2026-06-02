@@ -1,0 +1,16 @@
+{
+  "model": "MLP",
+  "hidden_layers": "(256,128,64)",
+  "activation": "relu",
+  "rmse_e4_mlp": 0.7167948948337103,
+  "mae_e4_mlp": 0.5685950506448835,
+  "r2_e4_mlp": 0.9696572954907167,
+  "rmse_baseline": 0.7268,
+  "lift_vs_bl5_pct": 1.3765967482511996,
+  "train_time_s": 18.32823395729065,
+  "latency_p95_ms": 1.9279408128294226,
+  "n_iter": 67,
+  "n_train": 58400,
+  "n_test": 14600,
+  "final_model": "MLP"
+}
