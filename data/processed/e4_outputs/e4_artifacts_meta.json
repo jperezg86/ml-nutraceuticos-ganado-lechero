@@ -1,18 +1,18 @@
 {
-  "etapa": "E4_v2",
+  "etapa": "E4",
   "fecha": "2026-06-03",
   "winner": "MLP",
   "winner_rmse": 0.6555,
   "winner_r2": 0.9746,
   "baseline_e3_rmse": 0.7268,
-  "delta_rmse": 0.0713,
+  "delta_rmse": 0.07130000000000003,
   "supera_baseline": true,
-  "n_candidatos": 7,
+  "n_candidatos": 6,
   "candidates_tuned": [
     "Ridge-E3",
     "ElasticNet",
     "BayesianRidge",
-    "HistGBM",
+    "GradientBoosting",
     "MLP",
     "k-NN (k=7)"
   ],

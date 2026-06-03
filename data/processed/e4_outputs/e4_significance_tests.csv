@@ -1,12 +1,13 @@
-Modelo,RMSE,CI_2.5,CI_97.5,t_stat,p_value,Significativo,CI_overlap,Mejor_que_E3
-ElasticNet,0.8395,0.82,0.8602,-14.642,0.0,Sí ✅,No,No
-BayesianRidge,0.7268,0.7175,0.737,-16.018,0.0,Sí ✅,Sí (tied),No
-MLP,0.6555,0.6476,0.6643,13.492,0.0,Sí ✅,No,Sí ✅
-XGBoost,1.1858,1.1374,1.2337,-15.689,0.0,Sí ✅,No,No
-IPCC-Baseline,4.7261,4.6802,4.7756,-97.523,0.0,Sí ✅,No,No
-k-NN (k=7),1.614,1.5777,1.6531,-34.751,0.0,Sí ✅,No,No
-Ridge-E3 (tuned),0.7267,0.7174,0.7369,15.974,0.0,Sí ✅,Sí (tied),Sí ✅
-ElasticNet (tuned),0.7273,0.7177,0.738,-0.793,0.4277,No ⚠️,Sí (tied),No
-BayesianRidge (tuned),0.7268,0.7175,0.737,-16.018,0.0,Sí ✅,Sí (tied),No
-MLP (tuned),0.6686,0.6604,0.6777,10.89,0.0,Sí ✅,No,Sí ✅
-k-NN (k=7) (tuned),1.7354,1.6897,1.7791,-32.657,0.0,Sí ✅,No,No
+Modelo,RMSE,CI_2.5,CI_97.5,t_stat,p_value,Sig_alpha05,CI_overlap,Mejor_que_E3
+ElasticNet,0.8395,0.82,0.8602,-14.642,0.0,Sí,No,No
+BayesianRidge,0.7268,0.7175,0.737,-16.018,0.0,Sí,Sí (tied),No
+MLP,0.6555,0.6476,0.6643,13.492,0.0,Sí,No,Sí
+XGBoost,1.1858,1.1374,1.2337,-15.689,0.0,Sí,No,No
+IPCC-Baseline,4.7261,4.6802,4.7756,-97.523,0.0,Sí,No,No
+k-NN (k=7),1.614,1.5777,1.6531,-34.751,0.0,Sí,No,No
+Ridge-E3 (tuned),0.7278,0.7185,0.738,-16.521,0.0,Sí,Sí (tied),No
+ElasticNet (tuned),0.7273,0.7177,0.738,-0.793,0.4277,No,Sí (tied),No
+BayesianRidge (tuned),0.7268,0.7175,0.737,-16.018,0.0,Sí,Sí (tied),No
+GradientBoosting (tuned),0.7558,0.731,0.7812,-2.532,0.0114,Sí,Sí (tied),No
+MLP (tuned),0.7833,0.7745,0.7935,-9.529,0.0,Sí,No,No
+k-NN (k=7) (tuned),1.7354,1.6897,1.7791,-32.657,0.0,Sí,No,No

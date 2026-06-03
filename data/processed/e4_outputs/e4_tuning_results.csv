@@ -1,0 +1,7 @@
+Modelo,RMSE,Mejora,Best_params,Tiempo_s
+Ridge-E3 (tuned),0.7278,-0.001,{'alpha': np.float64(15.199110829529332)},13.5
+ElasticNet (tuned),0.7273,0.1122,"{'l1_ratio': np.float64(0.9), 'alpha': np.float64(0.00339322177189533)}",12.1
+BayesianRidge (tuned),0.7268,-0.0,"{'lambda_1': 1e-05, 'alpha_1': 1e-06}",1.0
+GradientBoosting (tuned),0.7558,0.0,"{'subsample': 1.0, 'n_estimators': 300, 'max_depth': 4, 'learning_rate': 0.05}",4213.7
+MLP (tuned),0.7833,-0.1278,"{'learning_rate_init': 0.001, 'hidden_layer_sizes': (512, 256, 128), 'alpha': 0.01}",689.2
+k-NN (k=7) (tuned),1.7354,-0.1214,"{'weights': 'distance', 'p': 1, 'n_neighbors': 15}",232.8
