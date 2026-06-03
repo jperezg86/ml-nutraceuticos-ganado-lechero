@@ -209,6 +209,27 @@ app.delete('/api/registros/:id', (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// PATCH /api/registros/:id/metano-real — registrar el dato medido real
+app.patch('/api/registros/:id/metano-real', (req, res) => {
+  try {
+    const { intensidad_metano } = req.body;
+    if (intensidad_metano == null || isNaN(parseFloat(intensidad_metano))) {
+      return res.status(400).json({ error: 'intensidad_metano debe ser un número' });
+    }
+    const val = parseFloat(intensidad_metano);
+    // Actualizar el registro con el valor real medido
+    DB.db.prepare(`
+      UPDATE registros
+      SET intensidad_metano = ?,
+          nivel_emision = CASE WHEN ? > 25 THEN 'Alto' WHEN ? > 18 THEN 'Medio' ELSE 'Bajo' END
+      WHERE id = ?
+    `).run(val, val, val, req.params.id);
+
+    const registro = DB.db.prepare('SELECT id, id_vaca, intensidad_metano, prediccion_ml, nivel_emision FROM registros WHERE id=?').get(req.params.id);
+    res.json({ ok: true, registro });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ═══════════════════════════════════════════════════════════════
 // EXPLORADOR DEL HATO
 // ═══════════════════════════════════════════════════════════════

@@ -208,6 +208,7 @@ export default function Registros({ onGoToVaca }) {
       id_vaca: '',
       fecha: new Date().toISOString().split('T')[0],
       notas: '',
+      intensidad_metano_real: '',  // opcional — dato medido real
       // Campos especiales (no numéricos simples)
       sistema_produccion: 1,   // 0=Extensivo, 1=Semi-intensivo, 2=Intensivo
       tiene_taninos: 0,
@@ -216,6 +217,30 @@ export default function Registros({ onGoToVaca }) {
     CAMPOS.forEach(c => { f[c.key] = c.default })
     return f
   })
+
+  // Estado para edición inline de metano real en el historial
+  const [editingId, setEditingId]   = useState(null)
+  const [editValor, setEditValor]   = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
+
+  async function handleSaveMetanoReal(id) {
+    setSavingEdit(true)
+    try {
+      const res  = await fetch(`${API}/registros/${id}/metano-real`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intensidad_metano: parseFloat(editValor) }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setEditingId(null)
+      fetchData()
+    } catch(err) {
+      alert('Error: ' + err.message)
+    } finally {
+      setSavingEdit(false)
+    }
+  }
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -251,6 +276,10 @@ export default function Registros({ onGoToVaca }) {
         notas:    form.notas,
         fuente:   'manual',
         features,
+        // Dato real de laboratorio (opcional)
+        intensidad_metano: form.intensidad_metano_real !== '' && form.intensidad_metano_real !== null
+          ? parseFloat(form.intensidad_metano_real)
+          : null,
         // Campos raw para guardar en la tabla registros
         ...CAMPOS.reduce((acc, c) => { acc[c.key] = parseFloat(form[c.key]) || 0; return acc }, {}),
       }
@@ -460,8 +489,38 @@ export default function Registros({ onGoToVaca }) {
             {/* Variables auto-calculadas (info) */}
             <AutoCalcInfo form={form} />
 
+            {/* ── Dato real de laboratorio (opcional) ──────────────────────── */}
+            <div style={{
+              marginTop:16, padding:'14px 16px', borderRadius:8,
+              background:'rgba(200,169,81,0.06)', border:'1px solid rgba(200,169,81,0.18)',
+            }}>
+              <div style={{fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'#c8a951', marginBottom:10}}>
+                🧪 Dato real de laboratorio <span style={{fontWeight:400, textTransform:'none', letterSpacing:0, fontSize:11}}>(opcional)</span>
+              </div>
+              <div style={{display:'flex', alignItems:'flex-end', gap:20, flexWrap:'wrap'}}>
+                <div className="form-group" style={{margin:0, minWidth:200, maxWidth:260}}>
+                  <label style={{marginBottom:6}}>
+                    Metano medido
+                    <span style={{fontWeight:400, color:'var(--text-3)', marginLeft:6, fontSize:11}}>g CH₄/kg leche</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="ej. 21.3"
+                    value={form.intensidad_metano_real}
+                    onChange={e => handleField('intensidad_metano_real', e.target.value)}
+                  />
+                </div>
+                <span style={{fontSize:12, color:'var(--text-3)', paddingBottom:8, maxWidth:360, lineHeight:1.5}}>
+                  Si ya tienes el resultado del laboratorio, ingrésalo aquí para compararlo con la predicción del modelo.
+                  También puedes agregarlo después desde el historial.
+                </span>
+              </div>
+            </div>
+
             {/* Botón */}
-            <div style={{display:'flex', alignItems:'center', gap:12, marginTop:6}}>
+            <div style={{display:'flex', alignItems:'center', gap:12, marginTop:20}}>
               <button className="btn btn-primary" type="submit" disabled={submitting}>
                 {submitting ? '⏳ Guardando…' : '💾 Guardar y predecir'}
               </button>
@@ -541,7 +600,7 @@ export default function Registros({ onGoToVaca }) {
               <p>Sin registros aún. Agrega el primero desde la pestaña "Nuevo registro".</p>
             </div>
           ) : (
-            <div className="data-table-wrapper" style={{maxHeight:480, overflowY:'auto'}}>
+            <div className="data-table-wrapper" style={{maxHeight:520, overflowY:'auto'}}>
               <table className="data-table">
                 <thead>
                   <tr>
@@ -550,9 +609,10 @@ export default function Registros({ onGoToVaca }) {
                     <th>Fecha</th>
                     <th>Leche kg/d</th>
                     <th>FCR</th>
-                    <th>Peso kg</th>
                     <th>THI</th>
                     <th>Fuente</th>
+                    <th title="Predicción del modelo MLP">Predicción ML</th>
+                    <th title="Dato medido en laboratorio">Metano Real</th>
                     <th>Notas</th>
                     <th></th>
                   </tr>
@@ -565,13 +625,83 @@ export default function Registros({ onGoToVaca }) {
                       <td>{r.fecha}</td>
                       <td>{r.leche_kg_dia}</td>
                       <td>{r.fcr}</td>
-                      <td>{r.peso_kg}</td>
                       <td>{r.temp_humedad_idx}</td>
                       <td>
                         <span className={`badge badge-${r.fuente === 'manual' ? 'blue' : 'green'}`}>
                           {r.fuente}
                         </span>
                       </td>
+
+                      {/* Predicción ML */}
+                      <td>
+                        {r.prediccion_ml != null ? (
+                          <span style={{
+                            fontWeight:600,
+                            color: r.prediccion_ml > 25 ? '#ff5757' : r.prediccion_ml > 18 ? '#ffc857' : '#00c896',
+                          }}>
+                            {parseFloat(r.prediccion_ml).toFixed(2)}
+                          </span>
+                        ) : <span style={{color:'var(--text-3)'}}>—</span>}
+                      </td>
+
+                      {/* Metano Real — edición inline */}
+                      <td>
+                        {editingId === r.id ? (
+                          <div style={{display:'flex', alignItems:'center', gap:4}}>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="g CH₄/kg"
+                              value={editValor}
+                              onChange={e => setEditValor(e.target.value)}
+                              autoFocus
+                              style={{
+                                width:80, padding:'3px 6px', fontSize:12, borderRadius:5,
+                                background:'var(--surface-2)', border:'1px solid rgba(200,169,81,0.4)',
+                                color:'var(--text-1)',
+                              }}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') handleSaveMetanoReal(r.id)
+                                if (e.key === 'Escape') setEditingId(null)
+                              }}
+                            />
+                            <button
+                              onClick={() => handleSaveMetanoReal(r.id)}
+                              disabled={savingEdit}
+                              style={{background:'none', border:'none', cursor:'pointer', fontSize:14, color:'#00c896', padding:'2px 3px'}}
+                              title="Guardar"
+                            >✓</button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              style={{background:'none', border:'none', cursor:'pointer', fontSize:14, color:'var(--text-3)', padding:'2px 3px'}}
+                              title="Cancelar"
+                            >✕</button>
+                          </div>
+                        ) : (
+                          <div style={{display:'flex', alignItems:'center', gap:5}}>
+                            {r.intensidad_metano != null ? (
+                              <span style={{
+                                fontWeight:600,
+                                color: r.intensidad_metano > 25 ? '#ff5757' : r.intensidad_metano > 18 ? '#ffc857' : '#00c896',
+                              }}>
+                                {parseFloat(r.intensidad_metano).toFixed(2)}
+                              </span>
+                            ) : (
+                              <span style={{color:'var(--text-3)', fontSize:12}}>—</span>
+                            )}
+                            <button
+                              onClick={() => {
+                                setEditingId(r.id)
+                                setEditValor(r.intensidad_metano != null ? String(r.intensidad_metano) : '')
+                              }}
+                              style={{background:'none', border:'none', cursor:'pointer', color:'var(--text-3)', fontSize:12, padding:'2px 4px', opacity:0.7}}
+                              title="Editar metano real"
+                            >✏️</button>
+                          </div>
+                        )}
+                      </td>
+
                       <td style={{color:'var(--text-3)', fontSize:12, maxWidth:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
                         {r.notas || '—'}
                       </td>
