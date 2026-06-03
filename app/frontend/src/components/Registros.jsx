@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSort, SortTh } from '../hooks/useSort'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell
@@ -217,6 +218,10 @@ export default function Registros({ onGoToVaca }) {
     CAMPOS.forEach(c => { f[c.key] = c.default })
     return f
   })
+
+  // Ordenamiento de la tabla de historial
+  const { sorted: regSorted, sortKey: regKey, sortDir: regDir, toggleSort: regSort } =
+    useSort(registros, 'id', 'desc')
 
   // Estado para edición inline de metano real en el historial
   const [editingId, setEditingId]   = useState(null)
@@ -604,21 +609,21 @@ export default function Registros({ onGoToVaca }) {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>#</th>
-                    <th>ID Vaca</th>
-                    <th>Fecha</th>
-                    <th>Leche kg/d</th>
-                    <th>FCR</th>
-                    <th>THI</th>
+                    <SortTh colKey="id"                label="#"             sortKey={regKey} sortDir={regDir} onSort={regSort} />
+                    <SortTh colKey="id_vaca"           label="ID Vaca"       sortKey={regKey} sortDir={regDir} onSort={regSort} />
+                    <SortTh colKey="fecha"             label="Fecha"         sortKey={regKey} sortDir={regDir} onSort={regSort} />
+                    <SortTh colKey="leche_kg_dia"      label="Leche kg/d"    sortKey={regKey} sortDir={regDir} onSort={regSort} align="right" />
+                    <SortTh colKey="fcr"               label="FCR"           sortKey={regKey} sortDir={regDir} onSort={regSort} align="right" />
+                    <SortTh colKey="temp_humedad_idx"  label="THI"           sortKey={regKey} sortDir={regDir} onSort={regSort} align="right" />
                     <th>Fuente</th>
-                    <th title="Predicción del modelo MLP">Predicción ML</th>
-                    <th title="Dato medido en laboratorio">Metano Real</th>
+                    <SortTh colKey="prediccion_ml"     label="Predicción ML" sortKey={regKey} sortDir={regDir} onSort={regSort} align="right" style={{color: regKey==='prediccion_ml' ? 'var(--accent)' : undefined}} />
+                    <SortTh colKey="intensidad_metano" label="Metano Real"   sortKey={regKey} sortDir={regDir} onSort={regSort} align="right" />
                     <th>Notas</th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {registros.map(r => (
+                  {regSorted.map(r => (
                     <tr key={r.id}>
                       <td style={{color:'var(--text-3)'}}>{r.id}</td>
                       <td style={{fontWeight:600, color:'var(--accent)'}}>{r.id_vaca || '—'}</td>

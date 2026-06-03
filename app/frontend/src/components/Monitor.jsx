@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSort, SortTh } from '../hooks/useSort'
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
@@ -512,6 +513,7 @@ export default function Monitor() {
 
 /* ── Shared historial table ── */
 function HistorialTable({ rows }) {
+  const { sorted, sortKey, sortDir, toggleSort } = useSort(rows, 'creado_en', 'desc')
   return (
     <div className="card">
       <div className="card-title">Historial de análisis</div>
@@ -519,16 +521,16 @@ function HistorialTable({ rows }) {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Fecha</th>
+              <SortTh colKey="creado_en"    label="Fecha"         sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <th>Fuente</th>
-              <th style={{ textAlign: 'right' }}>N nuevos</th>
-              <th style={{ textAlign: 'right' }}>N históricos</th>
-              <th style={{ textAlign: 'right' }}>% Drift</th>
-              <th>Severidad</th>
+              <SortTh colKey="n_nuevos"     label="N nuevos"      sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" />
+              <SortTh colKey="n_historicos" label="N históricos"  sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" />
+              <SortTh colKey="drift_pct"    label="% Drift"       sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" />
+              <SortTh colKey="severidad"    label="Severidad"     sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => (
+            {sorted.map((row, i) => (
               <tr key={row.id ?? i}>
                 <td style={{ color: 'var(--text-2)', fontSize: 12 }}>
                   {row.creado_en

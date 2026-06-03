@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useSort, SortTh } from '../hooks/useSort'
 import {
   LineChart, Line,
   BarChart, Bar,
@@ -343,8 +344,12 @@ function PerfilVaca({ vaca, perfil, loading }) {
   }
 
   const hist = perfil.historial || []
-  const sorted = [...hist].sort((a, b) => a.fecha > b.fecha ? 1 : -1)
-  const last5  = [...sorted].slice(-5).reverse()
+  const histSorted = [...hist].sort((a, b) => a.fecha > b.fecha ? 1 : -1)
+  const last5  = [...histSorted].slice(-5).reverse()
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { sorted: visitasSorted, sortKey: vKey, sortDir: vDir, toggleSort: vSort } =
+    useSort(last5, 'fecha', 'desc')
 
   return (
     <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -396,17 +401,17 @@ function PerfilVaca({ vaca, perfil, loading }) {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Fecha</th>
-                <th style={{ textAlign: 'right' }}>Metano</th>
-                <th style={{ textAlign: 'right' }}>Leche kg/día</th>
-                <th style={{ textAlign: 'right' }}>Peso kg</th>
-                <th style={{ textAlign: 'right' }}>THI</th>
+                <SortTh colKey="fecha"              label="Fecha"      sortKey={vKey} sortDir={vDir} onSort={vSort} />
+                <SortTh colKey="intensidad_metano"  label="Metano"     sortKey={vKey} sortDir={vDir} onSort={vSort} align="right" />
+                <SortTh colKey="leche_kg_dia"       label="Leche kg/d" sortKey={vKey} sortDir={vDir} onSort={vSort} align="right" />
+                <SortTh colKey="peso_kg"            label="Peso kg"    sortKey={vKey} sortDir={vDir} onSort={vSort} align="right" />
+                <SortTh colKey="indice_thi"         label="THI"        sortKey={vKey} sortDir={vDir} onSort={vSort} align="right" />
                 <th>Nivel emisión</th>
                 <th>Notas</th>
               </tr>
             </thead>
             <tbody>
-              {last5.map((r, i) => (
+              {visitasSorted.map((r, i) => (
                 <tr key={i}>
                   <td style={{ color: 'var(--text-3)', fontSize: 12 }}>{fmtDate(r.fecha)}</td>
                   <td style={{ textAlign: 'right', color: metanoColor(r.intensidad_metano), fontWeight: 600 }}>
@@ -452,6 +457,10 @@ function TabTendencia({ stats }) {
 
   const tendencia = stats.tendencia || []
   const niveles   = stats.niveles   || []
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { sorted: razasSorted, sortKey: rKey, sortDir: rDir, toggleSort: rSort } =
+    useSort(stats.razas || [], 'alertas', 'desc')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -571,22 +580,22 @@ function TabTendencia({ stats }) {
       </div>
 
       {/* Razas table */}
-      {(stats.razas || []).length > 0 && (
+      {razasSorted.length > 0 && (
         <div className="card">
           <div className="card-title">Resumen por raza</div>
           <div className="data-table-wrapper">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Raza</th>
-                  <th style={{ textAlign: 'right' }}>Registros</th>
-                  <th style={{ textAlign: 'right' }}>Metano medio</th>
-                  <th style={{ textAlign: 'right' }}>Leche media</th>
-                  <th style={{ textAlign: 'right' }}>Alertas</th>
+                  <SortTh colKey="raza"         label="Raza"         sortKey={rKey} sortDir={rDir} onSort={rSort} />
+                  <SortTh colKey="n"            label="Registros"    sortKey={rKey} sortDir={rDir} onSort={rSort} align="right" />
+                  <SortTh colKey="metano_medio" label="Metano medio" sortKey={rKey} sortDir={rDir} onSort={rSort} align="right" />
+                  <SortTh colKey="leche_media"  label="Leche media"  sortKey={rKey} sortDir={rDir} onSort={rSort} align="right" />
+                  <SortTh colKey="alertas"      label="Alertas"      sortKey={rKey} sortDir={rDir} onSort={rSort} align="right" />
                 </tr>
               </thead>
               <tbody>
-                {stats.razas.map(r => (
+                {razasSorted.map(r => (
                   <tr key={r.raza}>
                     <td style={{ color: 'var(--text-1)', fontWeight: 600 }}>{r.raza}</td>
                     <td style={{ textAlign: 'right', color: 'var(--text-2)' }}>{(r.n || 0).toLocaleString()}</td>
@@ -691,7 +700,11 @@ function TabScatter() {
   })).filter(g => g.points.length > 0)
 
   const histData  = buildHistogram(data.map(d => d.y_col))
-  const razaData  = buildByRaza(data)
+  const razaDataRaw = buildByRaza(data)
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { sorted: razaData, sortKey: crKey, sortDir: crDir, toggleSort: crSort } =
+    useSort(razaDataRaw, 'alto', 'desc')
 
   // Color para barras de histograma según posición del eje Y
   function histColor(x) {
@@ -908,10 +921,10 @@ function TabScatter() {
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Raza</th>
-                        <th style={{ textAlign: 'right' }}>N registros</th>
-                        <th style={{ textAlign: 'right' }}>Promedio {yLabel}</th>
-                        <th style={{ textAlign: 'right' }}>Alertas (Alto)</th>
+                        <SortTh colKey="raza"     label="Raza"              sortKey={crKey} sortDir={crDir} onSort={crSort} />
+                        <SortTh colKey="n"        label="N registros"       sortKey={crKey} sortDir={crDir} onSort={crSort} align="right" />
+                        <SortTh colKey="promedio" label={`Prom. ${yLabel}`} sortKey={crKey} sortDir={crDir} onSort={crSort} align="right" />
+                        <SortTh colKey="alto"     label="Alertas (Alto)"    sortKey={crKey} sortDir={crDir} onSort={crSort} align="right" />
                       </tr>
                     </thead>
                     <tbody>

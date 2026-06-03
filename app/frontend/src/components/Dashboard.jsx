@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSort, SortTh } from '../hooks/useSort'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   ReferenceLine, PieChart, Pie, Cell, Legend,
@@ -70,8 +71,14 @@ export default function Dashboard() {
   const g  = hatoStats?.global || {}
   const razas    = hatoStats?.razas    || []
   const niveles  = hatoStats?.niveles  || []
-  const alertas  = hatoStats?.alertas  || []
+  const alertasRaw  = hatoStats?.alertas  || []
   const tendencia = hatoStats?.tendencia || []
+
+  // Ordenamiento de tablas del dashboard
+  const { sorted: razasSorted, sortKey: razaKey, sortDir: razaDir, toggleSort: razaSort } =
+    useSort(razas, 'alertas', 'desc')
+  const { sorted: alertas, sortKey: altKey, sortDir: altDir, toggleSort: altSort } =
+    useSort(alertasRaw, 'intensidad_metano', 'desc')
 
   const nivelPie = niveles.map(d => ({
     name:  d.nivel_emision,
@@ -260,14 +267,14 @@ export default function Dashboard() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Raza</th>
-                      <th style={{ textAlign: 'right' }}>N</th>
-                      <th style={{ textAlign: 'right' }}>CH₄ medio</th>
-                      <th style={{ textAlign: 'right' }}>Alertas</th>
+                      <SortTh colKey="raza"         label="Raza"     sortKey={razaKey} sortDir={razaDir} onSort={razaSort} />
+                      <SortTh colKey="n"            label="N"        sortKey={razaKey} sortDir={razaDir} onSort={razaSort} align="right" />
+                      <SortTh colKey="metano_medio" label="CH₄ med"  sortKey={razaKey} sortDir={razaDir} onSort={razaSort} align="right" />
+                      <SortTh colKey="alertas"      label="Alertas"  sortKey={razaKey} sortDir={razaDir} onSort={razaSort} align="right" />
                     </tr>
                   </thead>
                   <tbody>
-                    {razas.map(r => (
+                    {razasSorted.map(r => (
                       <tr key={r.raza}>
                         <td style={{ color: 'var(--text-1)', fontWeight: 500 }}>{r.raza}</td>
                         <td style={{ textAlign: 'right', color: 'var(--text-2)' }}>
@@ -309,16 +316,16 @@ export default function Dashboard() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Vaca</th>
+                  <SortTh colKey="id_vaca"            label="Vaca"         sortKey={altKey} sortDir={altDir} onSort={altSort} />
                   <th>Nombre</th>
-                  <th>Raza</th>
-                  <th>Fecha</th>
-                  <th style={{ textAlign: 'right' }}>CH₄ (g/kg)</th>
-                  <th style={{ textAlign: 'right' }}>Leche (kg/día)</th>
+                  <SortTh colKey="raza"               label="Raza"         sortKey={altKey} sortDir={altDir} onSort={altSort} />
+                  <SortTh colKey="fecha"              label="Fecha"        sortKey={altKey} sortDir={altDir} onSort={altSort} />
+                  <SortTh colKey="intensidad_metano"  label="CH₄ (g/kg)"   sortKey={altKey} sortDir={altDir} onSort={altSort} align="right" />
+                  <SortTh colKey="leche_kg_dia"       label="Leche kg/día" sortKey={altKey} sortDir={altDir} onSort={altSort} align="right" />
                 </tr>
               </thead>
               <tbody>
-                {alertas.slice(0, 10).map((a, i) => {
+                {alertas.map((a, i) => {
                   const isAlto = (a.intensidad_metano ?? 0) > 25
                   return (
                     <tr
