@@ -103,10 +103,12 @@ function KpiCard({ label, value, sub, cls }) {
 // ── Tab 1: Vacas ───────────────────────────────────────────────────────────────
 
 function TabVacas({ vacas, loadingVacas, initialVacaId, onVacaOpen }) {
-  const [search, setSearch]       = useState('')
-  const [razaFilter, setRazaFilter] = useState('Todas')
-  const [selectedId, setSelectedId] = useState(null)
-  const [perfil, setPerfil]       = useState(null)
+  const [search, setSearch]           = useState('')
+  const [razaFilter, setRazaFilter]   = useState('Todas')
+  const [soloAlertas, setSoloAlertas] = useState(false)
+  const [sortBy, setSortBy]           = useState('alertas') // 'alertas' | 'metano' | 'visitas'
+  const [selectedId, setSelectedId]   = useState(null)
+  const [perfil, setPerfil]           = useState(null)
   const [loadingPerfil, setLoadingPerfil] = useState(false)
 
   // Cuando llega un initialVacaId (deep-link desde Registros), lo abrimos automáticamente
@@ -141,19 +143,27 @@ function TabVacas({ vacas, loadingVacas, initialVacaId, onVacaOpen }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId])
 
-  const filtered = (vacas || []).filter(v => {
-    const q = search.toLowerCase()
-    const matchQ = !q
-      || String(v.id_vaca).toLowerCase().includes(q)
-      || (v.nombre_vaca || '').toLowerCase().includes(q)
-    const matchR = razaFilter === 'Todas' || v.raza === razaFilter
-    return matchQ && matchR
-  })
+  const filtered = (vacas || [])
+    .filter(v => {
+      const q = search.toLowerCase()
+      const matchQ = !q
+        || String(v.id_vaca).toLowerCase().includes(q)
+        || (v.nombre_vaca || '').toLowerCase().includes(q)
+      const matchR = razaFilter === 'Todas' || v.raza === razaFilter
+      const matchA = !soloAlertas || (v.alertas > 0)
+      return matchQ && matchR && matchA
+    })
+    .sort((a, b) => {
+      if (sortBy === 'alertas') return (b.alertas || 0) - (a.alertas || 0)
+      if (sortBy === 'metano')  return (b.metano_medio || 0) - (a.metano_medio || 0)
+      if (sortBy === 'visitas') return (b.n_visitas || 0) - (a.n_visitas || 0)
+      return 0
+    })
 
   return (
     <div>
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           type="text"
           placeholder="Buscar por ID o nombre…"
@@ -168,7 +178,7 @@ function TabVacas({ vacas, loadingVacas, initialVacaId, onVacaOpen }) {
             fontSize: 13,
             fontFamily: 'var(--font)',
             outline: 'none',
-            width: 240,
+            width: 220,
           }}
         />
         <Select
@@ -176,8 +186,38 @@ function TabVacas({ vacas, loadingVacas, initialVacaId, onVacaOpen }) {
           onChange={setRazaFilter}
           options={RAZAS.map(r => ({ value: r, label: r }))}
         />
-        <span style={{ color: 'var(--text-3)', fontSize: 12, marginLeft: 4 }}>
+
+        {/* Toggle: solo alertas */}
+        <button
+          onClick={() => setSoloAlertas(s => !s)}
+          style={{
+            padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+            cursor: 'pointer', transition: 'all 0.15s',
+            border: `1px solid ${soloAlertas ? '#ff5757' : 'rgba(255,255,255,0.12)'}`,
+            background: soloAlertas ? 'rgba(255,87,87,0.15)' : 'var(--bg-card-2)',
+            color: soloAlertas ? '#ff5757' : 'var(--text-2)',
+          }}
+        >
+          🚨 {soloAlertas ? 'Mostrando alertas' : 'Solo con alertas'}
+        </button>
+
+        {/* Ordenar por */}
+        <Select
+          value={sortBy}
+          onChange={setSortBy}
+          options={[
+            { value: 'alertas',  label: '↓ Más alertas primero' },
+            { value: 'metano',   label: '↓ Mayor metano primero' },
+            { value: 'visitas',  label: '↓ Más visitas primero' },
+          ]}
+          style={{ minWidth: 190 }}
+        />
+
+        <span style={{ color: 'var(--text-3)', fontSize: 12 }}>
           {filtered.length} / {(vacas || []).length} vacas
+          {soloAlertas && <span style={{ color: '#ff5757', marginLeft: 6 }}>
+            · {filtered.reduce((s, v) => s + (v.alertas || 0), 0)} alertas totales
+          </span>}
         </span>
       </div>
 
@@ -191,11 +231,29 @@ function TabVacas({ vacas, loadingVacas, initialVacaId, onVacaOpen }) {
                 <tr>
                   <th>Vaca</th>
                   <th>Raza</th>
-                  <th style={{ textAlign: 'right' }}>Visitas</th>
-                  <th style={{ textAlign: 'right' }}>Metano medio</th>
+                  <th
+                    style={{ textAlign: 'right', cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => setSortBy('visitas')}
+                    title="Ordenar por visitas"
+                  >
+                    Visitas {sortBy === 'visitas' ? '↓' : ''}
+                  </th>
+                  <th
+                    style={{ textAlign: 'right', cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => setSortBy('metano')}
+                    title="Ordenar por metano"
+                  >
+                    Metano medio {sortBy === 'metano' ? '↓' : ''}
+                  </th>
                   <th style={{ textAlign: 'right' }}>Leche kg/día</th>
                   <th>Última visita</th>
-                  <th style={{ textAlign: 'center' }}>Alertas</th>
+                  <th
+                    style={{ textAlign: 'center', cursor: 'pointer', userSelect: 'none', color: sortBy === 'alertas' ? '#ff5757' : undefined }}
+                    onClick={() => setSortBy('alertas')}
+                    title="Ordenar por alertas"
+                  >
+                    Alertas {sortBy === 'alertas' ? '↓' : ''}
+                  </th>
                 </tr>
               </thead>
               <tbody>
