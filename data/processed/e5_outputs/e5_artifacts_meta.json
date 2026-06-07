@@ -1,15 +1,15 @@
 {
-  "sklearn_version": "1.8.0",
-  "numpy_version": "2.4.4",
+  "sklearn_version": "1.7.2",
+  "numpy_version": "2.2.6",
   "random_seed": 42,
   "final_model": "Stacking",
-  "rmse_e5_final": 0.6117,
-  "r2_e5_final": 0.9779,
-  "latency_p95_ms": 44.43,
-  "rmse_e3_baseline": 0.7268,
-  "rmse_e4_best": 0.6555,
-  "lift_vs_bl5_pct": 15.84,
-  "lift_vs_e4_pct": 6.68,
+  "rmse_e5_final": 2.0068750669596866,
+  "r2_e5_final": 0.7621489047939476,
+  "latency_p95_ms": 3.822903849686554,
+  "rmse_e3_baseline": 1.848201249143523,
+  "rmse_e4_best": 1.8481802331283528,
+  "lift_vs_bl5_pct": -8.59,
+  "lift_vs_e4_pct": -8.59,
   "ensemble_significant_lift": true,
   "feature_names": [
     "edad_meses",
@@ -41,5 +41,42 @@
     "omega3_mg_l",
     "mes_cos"
   ],
-  "n_features": 28
+  "n_features": 28,
+  "train_rows": 58400,
+  "test_rows": 14600,
+  "n_vacas_train": 80,
+  "n_vacas_test": 20,
+  "best_individual_model": "bayesian_ridge",
+  "best_individual_rmse": 1.8481802331283528,
+  "candidate_scores": {
+    "ridge": {
+      "rmse": 1.848201249143523,
+      "r2": 0.7982734785900641
+    },
+    "mlp": {
+      "rmse": 2.099825114901896,
+      "r2": 0.7396061443325201
+    },
+    "bayesian_ridge": {
+      "rmse": 1.8481802331283528,
+      "r2": 0.7982780662544566
+    },
+    "elasticnet": {
+      "rmse": 1.866199890816743,
+      "r2": 0.7943253343056151
+    },
+    "knn": {
+      "rmse": 2.2111705043485657,
+      "r2": 0.7112586745608526
+    },
+    "gbr": {
+      "rmse": 2.2577770451715824,
+      "r2": 0.6989583489346899
+    },
+    "stacking": {
+      "rmse": 2.0068750669596866,
+      "r2": 0.7621489047939476
+    }
+  },
+  "ttest_pvalue_ridge_vs_stacking": 9.526657615642055e-69
 }

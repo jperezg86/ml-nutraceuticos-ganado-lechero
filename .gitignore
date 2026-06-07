@@ -8,9 +8,13 @@ build/
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 .env
+mlruns/
+.dvc/config.local
 
 # App — generados en runtime, no van a git
 app/db/*.db
+app/db/*.db-shm
+app/db/*.db-wal
 app/backend/node_modules/
 app/backend/uploads/
 app/frontend/node_modules/

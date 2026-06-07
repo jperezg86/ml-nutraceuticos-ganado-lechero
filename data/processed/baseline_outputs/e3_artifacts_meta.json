@@ -1,7 +1,7 @@
 {
   "sklearn_version": "1.7.2",
   "pandas_version": "2.3.3",
-  "numpy_version": "1.26.4",
+  "numpy_version": "2.2.6",
   "random_seed": 42,
   "n_features_reg": 28,
   "feature_names": [
@@ -35,8 +35,8 @@
     "mes_cos"
   ],
   "ridge_alpha": 1.0,
-  "rmse_e3_ridge": 0.7268097108750806,
-  "r2_e3_ridge": 0.9688034963448994,
+  "rmse_e3_ridge": 1.848201249143523,
+  "r2_e3_ridge": 0.7982734785900641,
   "train_rows": 58400,
   "test_rows": 14600,
   "ks_pvalue_drift": 1.849931633584625e-93,

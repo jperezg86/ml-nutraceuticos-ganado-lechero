@@ -164,6 +164,55 @@ pip install scikit-learn xgboost joblib pandas numpy scipy matplotlib seaborn ju
 python3 app/backend/scripts/retrain_pipeline_raw.py
 ```
 
+### MLOps: MLflow + DVC
+
+- **MLflow** guarda runs en `./mlruns` por defecto.
+- **DVC** ya queda apuntando a Google Drive con el remote `gdrive-remote`.
+- El dataset procesado principal ya está preparado como artefacto DVC en `data/processed/dataset_vacas_24m_feature_engineering.csv.dvc`.
+
+Flujo típico:
+
+```bash
+# 1) Instala dependencias Python del backend
+pip install -r app/requirements.txt
+
+# 2) Reentrena y registra el experimento en MLflow
+python3 app/backend/scripts/retrain_pipeline_raw.py
+
+# 3) Abre la UI local de MLflow
+mlflow ui --backend-store-uri file://$PWD/mlruns
+
+# 4) Sube el dataset/versionado a Google Drive con DVC
+dvc push
+```
+
+Si quieres usar una carpeta compartida de Drive en vez de `appDataFolder`, cambia el remote en `.dvc/config` por algo como `gdrive://<folder_id>/metano-ml`.
+
+### Setup rápido
+
+```bash
+make setup
+```
+
+Eso crea `.venv`, instala dependencias Python, instala el backend/frontend de Node y deja listo el entorno para correr MLflow y la app.
+
+### Entrenar y registrar
+
+```bash
+make train-log
+```
+
+Ese comando reentrena el modelo activo y deja un run visible en MLflow.
+
+### Entrenar E3 y E5
+
+```bash
+make train-e3
+make train-e5
+```
+
+Usa esos targets para registrar los pipelines baseline y de ensamble en MLflow con la misma estructura que E4.
+
 ---
 
 ## 🔌 API — Endpoints
