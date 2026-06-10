@@ -1,0 +1,7 @@
+Propuesta,Delta_RMSE_est,Complejidad,Prioridad
+"Lag features temporales (metano t-1, t-7, t-30)",-5 a -10%,Media,Alta
+Ampliar muestra Jersey/Pardo Suizo a 200+ vacas/raza,-3 a -8%,Baja,Alta
+Transformer temporal (TFT) para series por vaca individual,-8 a -15%,Alta,Baja
+SHAP por prediccion individual integrado en dashboard,N/A,Media,Alta
+A/B testing en produccion con shadow deployment,N/A,Alta,Media
+Variables de pastura y estacionalidad DJF/MAM/JJA/SON,-3 a -6%,Media,Alta

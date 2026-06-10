@@ -1,0 +1,10 @@
+Criterio,Objetivo,Resultado_E5,Estado
+RMSE < 0.75 g CH4/kg leche,< 0.75,0.6117 OK,GO
+R2 > 0.95,> 0.95,0.9779 OK,GO
+Latencia prediccion < 100 ms,< 100ms,7.3ms OK,GO
+Sin data leakage (GroupKFold),Validado,GroupKFold OK,GO
+Estabilidad CV inter-fold < 5%,< 5%,0.9% OK,GO
+Drift documentado con mitigacion,Plan definido,Retrain trimestral OK,GO
+Significancia estadistica vs baseline (p < 0.05),p < 0.05,p=0.0001 OK,GO
+Interpretabilidad SHAP disponible,SHAP OK,KernelExplainer OK,GO
+Criterios de negocio E1 satisfechos,Si,Todos OK,GO

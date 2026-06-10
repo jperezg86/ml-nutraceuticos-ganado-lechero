@@ -1,0 +1,11 @@
+Area,Accion,Prioridad,Plazo
+Modelo,Desplegar Stacking-E5 (pipeline_final_e5.pkl) como modelo de produccion,Alta,Inmediato
+Modelo,Retrain trimestral con datos recientes (Q1-Q4),Alta,Trimestral
+Modelo,Monitoreo KS mensual - trigger automatico si p < 0.05,Alta,Mensual
+Datos,Ampliar muestra Jersey y Pardo Suizo (sub-representadas),Media,6 meses
+Datos,Integrar medicion real de lab en app para retroalimentacion continua,Alta,Inmediato
+Operaciones,Contenedor Docker para portabilidad en cualquier servidor,Alta,Sprint 1
+Operaciones,CI/CD GitHub Actions: push -> build -> test -> deploy automatico,Media,Sprint 2
+Stakeholders,Dashboard operativo para equipo de campo (URL Cloud),Alta,Inmediato
+Stakeholders,Alertas automaticas vacas nivel Alto (>25 g CH4/kg leche),Media,Sprint 1
+Stakeholders,Reporte mensual de hato para gerencia con KPIs y tendencia,Baja,Trimestral

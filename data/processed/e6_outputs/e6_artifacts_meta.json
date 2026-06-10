@@ -1,0 +1,14 @@
+{
+  "equipo": "Equipo 48 - Tec de Monterrey",
+  "entregable": "E6 - Conclusiones Clave",
+  "modelo_final": "Stacking (MLP + BayesianRidge + ElasticNet -> meta Ridge)",
+  "rmse_final": 0.6117,
+  "r2_final": 0.9779,
+  "mape_final": 3.06,
+  "latencia_ms": 7.3,
+  "mejora_vs_e3_pct": 15.84,
+  "decision": "GO - Proceder a implementacion",
+  "plataforma": "GCP (Vertex AI + Cloud Run)",
+  "costo_mensual_usd": 31,
+  "criterios_cumplidos": "9 de 9"
+}
