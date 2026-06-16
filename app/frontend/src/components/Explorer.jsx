@@ -328,6 +328,13 @@ function TabVacas({ vacas, loadingVacas, initialVacaId, onVacaOpen }) {
 }
 
 function PerfilVaca({ vaca, perfil, loading }) {
+  // ── Hooks SIEMPRE antes de early returns (React Rules of Hooks) ──
+  const hist       = perfil?.historial || []
+  const histSorted = [...hist].sort((a, b) => a.fecha > b.fecha ? 1 : -1)
+  const last5      = [...histSorted].slice(-5).reverse()
+  const { sorted: visitasSorted, sortKey: vKey, sortDir: vDir, toggleSort: vSort } =
+    useSort(last5, 'fecha', 'desc')
+
   if (loading) {
     return (
       <div style={{ padding: 24 }}>
@@ -343,20 +350,12 @@ function PerfilVaca({ vaca, perfil, loading }) {
     )
   }
 
-  const hist = perfil.historial || []
-  const histSorted = [...hist].sort((a, b) => a.fecha > b.fecha ? 1 : -1)
-  const last5  = [...histSorted].slice(-5).reverse()
-
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { sorted: visitasSorted, sortKey: vKey, sortDir: vDir, toggleSort: vSort } =
-    useSort(last5, 'fecha', 'desc')
-
   return (
     <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ fontWeight: 700, color: 'var(--text-1)', fontSize: 15 }}>
         {vaca.nombre_vaca || `Vaca #${vaca.id_vaca}`}
         <span style={{ color: 'var(--text-3)', fontWeight: 400, fontSize: 12, marginLeft: 10 }}>
-          {vaca.raza} · {sorted.length} registros
+          {vaca.raza} · {histSorted.length} registros
         </span>
       </div>
 
@@ -367,7 +366,7 @@ function PerfilVaca({ vaca, perfil, loading }) {
             Intensidad metano (g CH₄/kg leche)
           </div>
           <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={sorted} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
+            <LineChart data={histSorted} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="fecha" tick={{ fill: '#545e78', fontSize: 10 }} tickFormatter={s => s ? s.slice(0, 7) : ''} />
               <YAxis tick={{ fill: '#545e78', fontSize: 10 }} />
@@ -383,7 +382,7 @@ function PerfilVaca({ vaca, perfil, loading }) {
             Producción de leche (kg/día)
           </div>
           <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={sorted} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
+            <LineChart data={histSorted} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="fecha" tick={{ fill: '#545e78', fontSize: 10 }} tickFormatter={s => s ? s.slice(0, 7) : ''} />
               <YAxis tick={{ fill: '#545e78', fontSize: 10 }} />

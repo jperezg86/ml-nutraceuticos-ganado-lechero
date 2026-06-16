@@ -55,6 +55,14 @@ export default function Dashboard() {
       .finally(() => setLoading(false))
   }, [])
 
+  // ── Hooks SIEMPRE antes de cualquier early return (React Rules of Hooks) ──
+  const razas      = hatoStats?.razas    || []
+  const alertasRaw = hatoStats?.alertas  || []
+  const { sorted: razasSorted, sortKey: razaKey, sortDir: razaDir, toggleSort: razaSort } =
+    useSort(razas, 'alertas', 'desc')
+  const { sorted: alertas, sortKey: altKey, sortDir: altDir, toggleSort: altSort } =
+    useSort(alertasRaw, 'intensidad_metano', 'desc')
+
   if (loading) return (
     <div className="loading">
       <div className="spinner" />
@@ -68,17 +76,9 @@ export default function Dashboard() {
     </div>
   )
 
-  const g  = hatoStats?.global || {}
-  const razas    = hatoStats?.razas    || []
-  const niveles  = hatoStats?.niveles  || []
-  const alertasRaw  = hatoStats?.alertas  || []
+  const g         = hatoStats?.global    || {}
+  const niveles   = hatoStats?.niveles   || []
   const tendencia = hatoStats?.tendencia || []
-
-  // Ordenamiento de tablas del dashboard
-  const { sorted: razasSorted, sortKey: razaKey, sortDir: razaDir, toggleSort: razaSort } =
-    useSort(razas, 'alertas', 'desc')
-  const { sorted: alertas, sortKey: altKey, sortDir: altDir, toggleSort: altSort } =
-    useSort(alertasRaw, 'intensidad_metano', 'desc')
 
   const nivelPie = niveles.map(d => ({
     name:  d.nivel_emision,
